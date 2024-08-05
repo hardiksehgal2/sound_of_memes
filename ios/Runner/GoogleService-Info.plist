@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>286047540866-vb3hh17qdjba651ala58l2l15jt4uk87.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.286047540866-vb3hh17qdjba651ala58l2l15jt4uk87</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>286047540866-6aac2ut8g8ophgb8l9jjf5hfjvj4fggh.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyD-t0EKr0ThQU7S1E1b-kuSVA1m8Azv3GA</string>
+	<key>GCM_SENDER_ID</key>
+	<string>286047540866</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.ventures</string>
+	<key>PROJECT_ID</key>
+	<string>sound-of-meme-26b68</string>
+	<key>STORAGE_BUCKET</key>
+	<string>sound-of-meme-26b68.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:286047540866:ios:88a3b7064265a86e1d869b</string>
+</dict>
+</plist>

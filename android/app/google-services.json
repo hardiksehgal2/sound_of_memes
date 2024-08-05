@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "286047540866",
+    "project_id": "sound-of-meme-26b68",
+    "storage_bucket": "sound-of-meme-26b68.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:286047540866:android:1b93868aaba7013c1d869b",
+        "android_client_info": {
+          "package_name": "com.example.ventures"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "286047540866-6aac2ut8g8ophgb8l9jjf5hfjvj4fggh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.ventures",
+            "certificate_hash": "fb2fe6f38c36711126b419ad4e2ffe2feed7b400"
+          }
+        },
+        {
+          "client_id": "286047540866-770q7sqbr246jlag9k7sm41c8935p3ua.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4vKZc4N4VNA2d-0GbhGM4oChiIb7wurk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "286047540866-770q7sqbr246jlag9k7sm41c8935p3ua.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "286047540866-vb3hh17qdjba651ala58l2l15jt4uk87.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.ventures"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
