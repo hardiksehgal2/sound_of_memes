@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously, no_leading_underscores_for_local_identifiers
-
 import 'package:animate_do/animate_do.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +9,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_button/sign_in_button.dart';
 import 'package:ventures/MainScreen/scroll_home.dart';
+import 'package:ventures/Screen/otp_verify.dart';
 import 'package:ventures/Screen/splash_screen.dart';
 import 'package:ventures/Utils/colors.dart';
 
@@ -25,7 +24,6 @@ class _SignUpState extends State<SignUp> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _firebaseAuth.authStateChanges().listen((event) {
       setState(() {
@@ -34,18 +32,23 @@ class _SignUpState extends State<SignUp> {
     });
   }
 
-
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _obscureText = true;
 
   bool isFlat = true;
+  bool _isLoading = false;
 
   Future<void> _signup() async {
     if (_formKey.currentState!.validate()) {
-      final url = Uri.parse('http://143.244.131.156:8000/signup');
+      setState(() {
+        _isLoading = true;
+      });
+
+      final url = Uri.parse('https://api.soundofmeme.com/signup2');
       final response = await http.post(
         url,
         headers: <String, String>{
@@ -55,26 +58,38 @@ class _SignUpState extends State<SignUp> {
           'email': _emailController.text,
           'password': _passwordController.text,
           'name': _nameController.text,
+          'username': _usernameController.text,
         }),
       );
 
       if (response.statusCode == 200) {
-        // Set the shared preference to indicate that the user is signed in
+        final responseData = jsonDecode(response.body);
+        final sessionToken = responseData['session_token'];
+
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('isSignedIn', true);
+        await prefs.setString('session_token', sessionToken);
+
+        setState(() {
+          _isLoading = false;
+        });
 
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const MySplashScreen()),
+          MaterialPageRoute(builder: (context) => OTPVerificationScreen()),
         );
       } else {
+        setState(() {
+          _isLoading = false;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Signup failed: ${response.body}')),
         );
       }
     }
   }
-Widget _googleSignInButton() {
+
+  Widget _googleSignInButton() {
     return Center(
       child: SizedBox(
         height: 50,
@@ -86,28 +101,34 @@ Widget _googleSignInButton() {
       ),
     );
   }
-   void _handleGoogleSignIn() async {
-  try {
-    GoogleAuthProvider _googleAuthProvider = GoogleAuthProvider();
-    UserCredential userCredential = await _firebaseAuth.signInWithProvider(_googleAuthProvider);
-    if (userCredential.user != null) {
-      await _setSignedIn(true);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ScrollableHome()),
+
+  void _handleGoogleSignIn() async {
+    try {
+      GoogleAuthProvider _googleAuthProvider = GoogleAuthProvider();
+      UserCredential userCredential =
+          await _firebaseAuth.signInWithProvider(_googleAuthProvider);
+      if (userCredential.user != null) {
+        await _setSignedIn(true);
+        print('');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ScrollableHome()),
+        );
+      }
+    } catch (error) {
+      print("Error $error");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Google Sign-In failed. Please try again.')),
       );
     }
-  } catch (error) {
-    print(error);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Google Sign-In failed. Please try again.')),
-    );
   }
-}
-Future<void> _setSignedIn(bool value) async {
+
+  Future<void> _setSignedIn(bool value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isSignedIn', value);
   }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -116,8 +137,8 @@ Future<void> _setSignedIn(bool value) async {
       appBar: AppBar(
         leading: IconButton(
           onPressed: () {
-            navigator?.push(
-                MaterialPageRoute(builder: (context) => const MySplashScreen()));
+            navigator?.push(MaterialPageRoute(
+                builder: (context) => const MySplashScreen()));
           },
           icon: const Icon(Icons.arrow_back),
         ),
@@ -163,6 +184,8 @@ Future<void> _setSignedIn(bool value) async {
                 ),
                 SizedBox(height: size.height * 0.04),
                 myTextField("Enter Name", Colors.white, _nameController),
+                myTextField(
+                    "Enter Username", Colors.white, _usernameController),
                 myTextField("Enter Email", Colors.white, _emailController),
                 myTextField(
                     "Enter Password", Colors.black26, _passwordController,
@@ -180,15 +203,17 @@ Future<void> _setSignedIn(bool value) async {
                         color: Colors.blue,
                         borderRadius: BorderRadius.circular(15),
                       ),
-                      child: const Center(
-                        child: Text(
-                          "Sign Up",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontSize: 22,
-                          ),
-                        ),
+                      child: Center(
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text(
+                                "Sign Up",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                ),
+                              ),
                       ),
                     ),
                   ),

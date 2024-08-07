@@ -1,29 +1,27 @@
 class AllSongs {
-  List<Songs>? songs;
+  List<Songs> songs;
 
-  AllSongs({this.songs});
+  AllSongs({required this.songs});
 
-  AllSongs.fromJson(Map<String, dynamic> json) {
-    if (json['songs'] != null) {
-      songs = <Songs>[]; // Properly initialize the list
-      json['songs'].forEach((v) {
-        songs?.add(Songs.fromJson(v));
-      });
-    }
+  factory AllSongs.fromJson(Map<String, dynamic> json) {
+    return AllSongs(
+      songs: (json['songs'] as List<dynamic>?)
+              ?.map((v) => Songs.fromJson(v as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    if (songs != null) {
-      data['songs'] = songs?.map((v) => v.toJson()).toList();
-    }
-    return data;
+    return {
+      'songs': songs.map((v) => v.toJson()).toList(),
+    };
   }
 }
 
 class Songs {
-  int? songId;
-  String? userId;
+  int songId;
+  String userId;
   String songName;
   String songUrl;
   int likes;
@@ -32,10 +30,12 @@ class Songs {
   String lyrics;
   List<String> tags;
   String dateTime;
+  String slug;
+  String username;
 
   Songs({
-    this.songId,
-    this.userId,
+    required this.songId,
+    required this.userId,
     required this.songName,
     required this.songUrl,
     required this.likes,
@@ -44,32 +44,41 @@ class Songs {
     required this.lyrics,
     required this.tags,
     required this.dateTime,
+    required this.slug,
+    required this.username,
   });
 
-  Songs.fromJson(Map<String, dynamic> json)
-      : songId = json['song_id'],
-        userId = json['user_id'],
-        songName = json['song_name'],
-        songUrl = json['song_url'],
-        likes = json['likes'],
-        views = json['views'],
-        imageUrl = json['image_url'],
-        lyrics = json['lyrics'],
-        tags = List<String>.from(json['tags']),
-        dateTime = json['date_time'];
+  factory Songs.fromJson(Map<String, dynamic> json) {
+    return Songs(
+      songId: json['song_id'] as int,
+      userId: json['user_id'] as String,
+      songName: json['song_name'] as String,
+      songUrl: json['song_url'] as String,
+      likes: json['likes'] as int,
+      views: json['views'] as int,
+      imageUrl: json['image_url'] as String,
+      lyrics: json['lyrics'] as String,
+      tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
+      dateTime: json['date_time'] as String,
+      slug: json['slug'] as String,
+      username: json['username'] as String,
+    );
+  }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['song_id'] = songId;
-    data['user_id'] = userId;
-    data['song_name'] = songName;
-    data['song_url'] = songUrl;
-    data['likes'] = likes;
-    data['views'] = views;
-    data['image_url'] = imageUrl;
-    data['lyrics'] = lyrics;
-    data['tags'] = tags;
-    data['date_time'] = dateTime;
-    return data;
+    return {
+      'song_id': songId,
+      'user_id': userId,
+      'song_name': songName,
+      'song_url': songUrl,
+      'likes': likes,
+      'views': views,
+      'image_url': imageUrl,
+      'lyrics': lyrics,
+      'tags': tags,
+      'date_time': dateTime,
+      'slug': slug,
+      'username': username,
+    };
   }
 }

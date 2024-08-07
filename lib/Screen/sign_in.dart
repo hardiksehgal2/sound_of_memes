@@ -46,51 +46,58 @@ class _SignInState extends State<SignIn> {
   final _formKey = GlobalKey<FormState>();
 
   Future<void> _signIn() async {
-    if (_formKey.currentState!.validate()) {
-      final url = Uri.parse('http://143.244.131.156:8000/login');
-      print("Attempting to sign in with URL: $url");
+  if (_formKey.currentState!.validate()) {
+    final url = Uri.parse('https://api.soundofmeme.com/login');
+    print("Attempting to sign in with URL: $url");
 
-      var body = jsonEncode({
-        'email': _emailController.text,
-        'password': _passwordController.text,
-      });
-      print("Request body: $body");
+    var body = jsonEncode({
+      'email': _emailController.text,
+      'password': _passwordController.text,
+    });
+    print("Request body: $body");
 
-      try {
-        print("Sending request...");
-        var response = await http.post(
-          url,
-          headers: {
-            "Content-Type": "application/json; charset=UTF-8",
-          },
-          body: body,
+    try {
+      print("Sending request...");
+      var response = await http.post(
+        url,
+        headers: {
+          "Content-Type": "application/json; charset=UTF-8",
+        },
+        body: body,
+      );
+      print("Response received. Status code: ${response.statusCode}");
+      print("Response body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        final accessToken = responseData['access_token'];
+        print('Received Token: $accessToken');
+
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isSignedIn', true);
+        await prefs.setString('access_token', accessToken);
+
+        final storedToken = prefs.getString('access_token');
+        print('Stored Token: $storedToken');
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ScrollableHome()),
         );
-        print("Response received. Status code: ${response.statusCode}");
-        print("Response body: ${response.body}");
-
-        if (response.statusCode == 200) {
-          // Set the shared preference to indicate that the user is signed in
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          await prefs.setBool('isSignedIn', true);
-
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ScrollableHome()),
-          );
-        } else {
-          print("Sign in failed");
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Sign In failed: Incorrect credentials')),
-          );
-        }
-      } catch (e) {
-        print("Error occurred: $e");
+      } else {
+        print("Sign in failed");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('Sign In failed: Incorrect credentials')),
         );
       }
+    } catch (e) {
+      print("Error occurred: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
     }
   }
+}
 
    Widget _googleSignInButton() {
     return Center(
