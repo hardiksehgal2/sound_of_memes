@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element, avoid_print
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -22,6 +24,7 @@ class _SongScreenState extends State<SongScreen> {
   bool _isLoading = false;
   bool _hasMore = true;
   Set<int> _likedSongs = {};
+  Set<int> _dislikedSongs = {};
 
   late AudioPlayer audioPlayer;
 
@@ -31,6 +34,7 @@ class _SongScreenState extends State<SongScreen> {
     audioPlayer = AudioPlayer();
     _fetchSongs();
     _loadLikedSongs();
+    _loaddisLikedSongs();
   }
 
   @override
@@ -48,10 +52,25 @@ class _SongScreenState extends State<SongScreen> {
     });
   }
 
+  Future<void> _loaddisLikedSongs() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _dislikedSongs = (prefs.getStringList('disliked_songs') ?? [])
+          .map((e) => int.parse(e))
+          .toSet();
+    });
+  }
+
   Future<void> _saveLikedSongs() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(
         'liked_songs', _likedSongs.map((e) => e.toString()).toList());
+  }
+
+  Future<void> _savedisLikedSongs() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+        'disliked_songs', _dislikedSongs.map((e) => e.toString()).toList());
   }
 
   Future<String?> getToken() async {
@@ -61,8 +80,6 @@ class _SongScreenState extends State<SongScreen> {
 
   Future<void> likeSong(int songId) async {
     final token = await getToken();
-    print('Retrieved token: $token');
-
     if (token == null || token.isEmpty) {
       print('No token found. Please log in again.');
       return;
@@ -80,17 +97,18 @@ class _SongScreenState extends State<SongScreen> {
         body: jsonEncode({'song_id': songId}),
       );
 
-      print('Like request URL: ${response.request?.url}');
-      print('Like request headers: ${response.request?.headers}');
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       if (response.statusCode == 200) {
         print('Successfully liked the song.');
         setState(() {
-          _likedSongs.add(songId);
+          if (_likedSongs.contains(songId)) {
+            _likedSongs.remove(songId);
+          } else {
+            _likedSongs.add(songId);
+            _dislikedSongs.remove(songId);
+          }
         });
         _saveLikedSongs();
+        _savedisLikedSongs();
       } else {
         print('Failed to like song. Status code: ${response.statusCode}');
       }
@@ -118,16 +136,18 @@ class _SongScreenState extends State<SongScreen> {
         body: jsonEncode({'song_id': songId}),
       );
 
-      print('Dislike request URL: ${response.request?.url}');
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       if (response.statusCode == 200) {
         print('Successfully disliked the song.');
         setState(() {
-          _likedSongs.remove(songId);
+          if (_dislikedSongs.contains(songId)) {
+            _dislikedSongs.remove(songId);
+          } else {
+            _dislikedSongs.add(songId);
+            _likedSongs.remove(songId);
+          }
         });
         _saveLikedSongs();
+        _savedisLikedSongs();
       } else {
         print('Failed to dislike song. Status code: ${response.statusCode}');
       }
@@ -169,29 +189,24 @@ class _SongScreenState extends State<SongScreen> {
     return _likedSongs.contains(songId);
   }
 
+  bool _isdisLiked(int songId) {
+    return _dislikedSongs.contains(songId);
+  }
+
   Future<void> _toggleLike(int songId) async {
     if (_isLiked(songId)) {
-      await dislikeSong(songId);
+      await likeSong(songId); // Toggle like off
     } else {
       await likeSong(songId);
     }
-    setState(() {});
   }
 
-  void navigateToExample(Songs song, int index, List<Songs> allSongs) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => Example(
-          songUrl: song.songUrl,
-          imageUrl: song.imageUrl,
-          title: song.songName,
-          artist: song.userId ,
-          allSongs: allSongs,
-          currentIndex: index,
-        ),
-      ),
-    );
+  Future<void> _toggleDislike(int songId) async {
+    if (_isdisLiked(songId)) {
+      await dislikeSong(songId); // Toggle dislike off
+    } else {
+      await dislikeSong(songId);
+    }
   }
 
   Future<void> _logout() async {
@@ -222,6 +237,22 @@ class _SongScreenState extends State<SongScreen> {
             child: const Text('Logout'),
           ),
         ],
+      ),
+    );
+  }
+
+  void navigateToExample(Songs song, int index, List<Songs> allSongs) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Example(
+          songUrl: song.songUrl,
+          imageUrl: song.imageUrl,
+          title: song.songName,
+          artist: song.userId,
+          allSongs: allSongs,
+          currentIndex: index,
+        ),
       ),
     );
   }
@@ -259,100 +290,115 @@ class _SongScreenState extends State<SongScreen> {
           }
           return false;
         },
-        child: GridView.builder(
-          padding: const EdgeInsets.all(16),
-          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 200,
-            childAspectRatio: 0.7,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-          ),
-          itemCount: _songs.length + (_isLoading ? 1 : 0),
-          itemBuilder: (context, index) {
-            if (index >= _songs.length) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            }
+                  child: GridView.builder(
+            padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 200,
+              childAspectRatio: 0.7,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: _songs.length + (_isLoading ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index >= _songs.length) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
 
-            final song = _songs[index];
-            final liked = _isLiked(song.songId);
+              final song = _songs[index];
+              final liked = _isLiked(song.songId);
+              final disliked = _isdisLiked(song.songId);
 
-            return Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => navigateToExample(song, index, _songs),
-                      child: Hero(
-                        tag: song.imageUrl,
-                        child: ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(12)),
-                          child: Image.network(
-                            song.imageUrl,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
+              return Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => navigateToExample(song, index, _songs),
+                        child: Hero(
+                          tag: song.imageUrl,
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(12)),
+                            child: Image.network(
+                              song.imageUrl,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          song.songName,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          song.tags.join(', '),
-                          style: const TextStyle(
-                              fontSize: 10, color: Colors.grey),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: Icon(
-                                Icons.favorite,
-                                size: 14,
-                                color: liked ? Colors.pink : Colors.grey,
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            song.songName,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 14),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            song.tags.join(', '),
+                            style: const TextStyle(
+                                fontSize: 10, color: Colors.grey),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  Icons.favorite,
+                                  size: 14,
+                                  color: liked ? Colors.pink : Colors.grey,
+                                ),
+                                onPressed: () => _toggleLike(song.songId),
                               ),
-                              onPressed: () => _toggleLike(song.songId),
-                            ),
-                            const SizedBox(width: 4),
-                            Text('${song.likes}',
-                                style: const TextStyle(fontSize: 10)),
-                            const SizedBox(width: 10),
-                            const Icon(Icons.visibility, size: 14),
-                            const SizedBox(width: 4),
-                            Text('${song.views}',
-                                style: const TextStyle(fontSize: 10)),
-                          ],
-                        ),
-                      ],
+                              const SizedBox(width: 2),
+                              Text('${_likedSongs.contains(song.songId) ? song.likes + (_isLiked(song.songId) ? 1 : 0) : song.likes}',
+                                  style: const TextStyle(fontSize: 10)),
+                              const SizedBox(width: 3),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.thumb_down_alt,
+                                  size: 14,
+                                  color: disliked ? Colors.blue : Colors.grey,
+                                ),
+                                onPressed: () => _toggleDislike(song.songId),
+                              ),
+                              const SizedBox(width: 2),
+                              // Text('${_dislikedSongs.contains(song.songId) ? song.dislikes + (_isdisLiked(song.songId) ? 1 : 0) : song.dislikes}',
+                              //     style: const TextStyle(fontSize: 10)),
+                              const SizedBox(width: 10),
+                              const Icon(Icons.visibility, size: 14),
+                              const SizedBox(width: 4),
+                              Text('${song.views}',
+                                  style: const TextStyle(fontSize: 10)),
+                            ],
+                          )
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          },
+                  ],
+                ),
+              );
+            },
+          ),
         ),
-      ),
       // floatingActionButton: FloatingActionButtonWidget(),
     );
   }
 }
+
+         
