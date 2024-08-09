@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:audioplayers/audioplayers.dart';
+import 'package:page_animation_transition/animations/bottom_to_top_faded_transition.dart';
+import 'package:page_animation_transition/animations/bottom_to_top_transition.dart';
+import 'package:page_animation_transition/animations/right_to_left_faded_transition.dart';
+import 'package:page_animation_transition/page_animation_transition.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ventures/MusicScreen/custom_button';
 // import 'package:ventures/MusicScreen/custom_button.dart';
@@ -163,26 +167,41 @@ class _SongScreenState extends State<SongScreen> {
       _isLoading = true;
     });
 
-    final url = Uri.parse('https://api.soundofmeme.com/allsongs?page=$_page');
-    final response = await http.get(url);
+    try {
+      final url = Uri.parse('https://api.soundofmeme.com/allsongs?page=$_page');
+      final response = await http.get(url);
 
-    if (response.statusCode == 200) {
-      final allSongs = AllSongs.fromJson(jsonDecode(response.body));
-      if (allSongs.songs.isEmpty) {
-        _hasMore = false;
+      if (response.statusCode == 200) {
+        final allSongs = AllSongs.fromJson(jsonDecode(response.body));
+        if (allSongs.songs.isEmpty) {
+          _hasMore = false;
+        } else {
+          setState(() {
+            _songs.addAll(allSongs.songs);
+            _page++;
+          });
+        }
       } else {
-        setState(() {
-          _songs.addAll(allSongs.songs);
-          _page++;
-        });
+        // Handle the error here, e.g., display a snackbar or show an error dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Failed to load songs. Status code: ${response.statusCode}'),
+          ),
+        );
       }
-    } else {
-      throw Exception('Failed to load songs');
+    } catch (e) {
+      // Handle the error here, e.g., display a snackbar or show an error dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An error occurred while loading songs: $e'),
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
-
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   bool _isLiked(int songId) {
@@ -290,115 +309,131 @@ class _SongScreenState extends State<SongScreen> {
           }
           return false;
         },
-                  child: GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 200,
-              childAspectRatio: 0.7,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-            ),
-            itemCount: _songs.length + (_isLoading ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (index >= _songs.length) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
+        child: GridView.builder(
+          padding: const EdgeInsets.all(16),
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 200,
+            childAspectRatio: 0.7,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 16,
+          ),
+          itemCount: _songs.length + (_isLoading ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (index >= _songs.length) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
 
-              final song = _songs[index];
-              final liked = _isLiked(song.songId);
-              final disliked = _isdisLiked(song.songId);
+            final song = _songs[index];
+            final liked = _isLiked(song.songId);
+            final disliked = _isdisLiked(song.songId);
 
-              return Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => navigateToExample(song, index, _songs),
-                        child: Hero(
-                          tag: song.imageUrl,
-                          child: ClipRRect(
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(12)),
-                            child: Image.network(
-                              song.imageUrl,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
+            return Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          PageAnimationTransition(
+                            page: Example(
+                              songUrl: song.songUrl,
+                              imageUrl: song.imageUrl,
+                              title: song.songName,
+                              artist: song.username,
+                              allSongs:
+                                  _songs, // Pass the correct list of songs
+                              currentIndex: index,
                             ),
+                            pageAnimationType: BottomToTopFadedTransition(),
+                          ),
+                        );
+                      }, // navigateToExample(song, index, _songs)
+
+                      child: Hero(
+                        tag: song.imageUrl,
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(12)),
+                          child: Image.network(
+                            song.imageUrl,
+                            fit: BoxFit.fill,
+                            width: double.infinity,
                           ),
                         ),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            song.songName,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 14),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            song.tags.join(', '),
-                            style: const TextStyle(
-                                fontSize: 10, color: Colors.grey),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              IconButton(
-                                icon: Icon(
-                                  Icons.favorite,
-                                  size: 14,
-                                  color: liked ? Colors.pink : Colors.grey,
-                                ),
-                                onPressed: () => _toggleLike(song.songId),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          song.songName,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 14),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          song.tags.join(', '),
+                          style:
+                              const TextStyle(fontSize: 10, color: Colors.grey),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        // const SizedBox(height: 2),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                Icons.favorite,
+                                size: 14,
+                                color: liked ? Colors.pink : Colors.grey,
                               ),
-                              const SizedBox(width: 2),
-                              Text('${_likedSongs.contains(song.songId) ? song.likes + (_isLiked(song.songId) ? 1 : 0) : song.likes}',
-                                  style: const TextStyle(fontSize: 10)),
-                              const SizedBox(width: 3),
-                              IconButton(
-                                icon: Icon(
-                                  Icons.thumb_down_alt,
-                                  size: 14,
-                                  color: disliked ? Colors.blue : Colors.grey,
-                                ),
-                                onPressed: () => _toggleDislike(song.songId),
+                              onPressed: () => _toggleLike(song.songId),
+                            ),
+                            // const SizedBox(width: 2),
+                            Text(
+                                '${_likedSongs.contains(song.songId) ? song.likes + (_isLiked(song.songId) ? 1 : 0) : song.likes}',
+                                style: const TextStyle(fontSize: 10)),
+                            // const SizedBox(width: 3),
+                            IconButton(
+                              icon: Icon(
+                                Icons.thumb_down_alt,
+                                size: 14,
+                                color: disliked ? Colors.blue : Colors.grey,
                               ),
-                              const SizedBox(width: 2),
-                              // Text('${_dislikedSongs.contains(song.songId) ? song.dislikes + (_isdisLiked(song.songId) ? 1 : 0) : song.dislikes}',
-                              //     style: const TextStyle(fontSize: 10)),
-                              const SizedBox(width: 10),
-                              const Icon(Icons.visibility, size: 14),
-                              const SizedBox(width: 4),
-                              Text('${song.views}',
-                                  style: const TextStyle(fontSize: 10)),
-                            ],
-                          )
-                        ],
-                      ),
+                              onPressed: () => _toggleDislike(song.songId),
+                            ),
+                            const SizedBox(width: 2),
+                            // Text('${_dislikedSongs.contains(song.songId) ? song.dislikes + (_isdisLiked(song.songId) ? 1 : 0) : song.dislikes}',
+                            //     style: const TextStyle(fontSize: 10)),
+                            // const SizedBox(width: 10),
+                            const Icon(Icons.visibility, size: 14),
+                            const SizedBox(width: 4),
+                            Text('${song.views}',
+                                style: const TextStyle(fontSize: 10)),
+                          ],
+                        )
+                      ],
                     ),
-                  ],
-                ),
-              );
-            },
-          ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
+      ),
       // floatingActionButton: FloatingActionButtonWidget(),
     );
   }
 }
-
-         

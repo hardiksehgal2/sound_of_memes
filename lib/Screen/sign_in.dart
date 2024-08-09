@@ -24,82 +24,67 @@ class SignIn extends StatefulWidget {
 }
 
 class _SignInState extends State<SignIn> {
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  User? _user;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    _firebaseAuth.authStateChanges().listen((event) {
-      setState(() {
-        _user = event;
-      });
-    });
-  }
-
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool isFlat = true;
   bool _isObscure = true;
 
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+
   final _formKey = GlobalKey<FormState>();
 
   Future<void> _signIn() async {
-  if (_formKey.currentState!.validate()) {
-    final url = Uri.parse('https://api.soundofmeme.com/login');
-    print("Attempting to sign in with URL: $url");
+    if (_formKey.currentState!.validate()) {
+      final url = Uri.parse('https://api.soundofmeme.com/login');
+      print("Attempting to sign in with URL: $url");
 
-    var body = jsonEncode({
-      'email': _emailController.text,
-      'password': _passwordController.text,
-    });
-    print("Request body: $body");
+      var body = jsonEncode({
+        'email': _emailController.text,
+        'password': _passwordController.text,
+      });
+      print("Request body: $body");
 
-    try {
-      print("Sending request...");
-      var response = await http.post(
-        url,
-        headers: {
-          "Content-Type": "application/json; charset=UTF-8",
-        },
-        body: body,
-      );
-      print("Response received. Status code: ${response.statusCode}");
-      print("Response body: ${response.body}");
-
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        final accessToken = responseData['access_token'];
-        print('Received Token: $accessToken');
-
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('isSignedIn', true);
-        await prefs.setString('access_token', accessToken);
-
-        final storedToken = prefs.getString('access_token');
-        print('Stored Token: $storedToken');
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => ScrollableHome()),
+      try {
+        print("Sending request...");
+        var response = await http.post(
+          url,
+          headers: {
+            "Content-Type": "application/json; charset=UTF-8",
+          },
+          body: body,
         );
-      } else {
-        print("Sign in failed");
+        print("Response received. Status code: ${response.statusCode}");
+        print("Response body: ${response.body}");
+
+        if (response.statusCode == 200) {
+          final responseData = jsonDecode(response.body);
+          final accessToken = responseData['access_token'];
+          print('Received Token: $accessToken');
+
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('isSignedIn', true);
+          await prefs.setString('access_token', accessToken);
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ScrollableHome()),
+          );
+        } else {
+          print("Sign in failed");
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Sign In failed: Incorrect credentials')),
+          );
+        }
+      } catch (e) {
+        print("Error occurred: $e");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sign In failed: Incorrect credentials')),
+          SnackBar(content: Text('Error: $e')),
         );
       }
-    } catch (e) {
-      print("Error occurred: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
     }
   }
-}
 
-   Widget _googleSignInButton() {
+  Widget _googleSignInButton() {
     return Center(
       child: SizedBox(
         height: 50,
@@ -111,32 +96,69 @@ class _SignInState extends State<SignIn> {
       ),
     );
   }
-   void _handleGoogleSignIn() async {
-  try {
-    GoogleAuthProvider _googleAuthProvider = GoogleAuthProvider();
-    UserCredential userCredential = await _firebaseAuth.signInWithProvider(_googleAuthProvider);
-    if (userCredential.user != null) {
-      await _setSignedIn(true);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => ScrollableHome()),
+
+  Future<void> _handleGoogleSignIn() async {
+    try {
+      GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+      if (googleUser != null) {
+        print("Google sign-in successful");
+        print("Name: ${googleUser.displayName}");
+        print("Email: ${googleUser.email}");
+        print("Profile Picture URL: ${googleUser.photoUrl}");
+
+        var body = jsonEncode({
+          "name": googleUser.displayName,
+          "email": googleUser.email,
+          "picture": googleUser.photoUrl,
+        });
+
+        final url = Uri.parse('https://api.soundofmeme.com/googlelogin');
+        print("Sending POST request to $url with body: $body");
+
+        var response = await http.post(
+          url,
+          headers: {
+            "Content-Type": "application/json; charset=UTF-8",
+          },
+          body: body,
+        );
+
+        if (response.statusCode == 200) {
+          print("Google login successful");
+          final responseData = jsonDecode(response.body);
+          final accessToken = responseData['access_token'];
+          print('Received access token: $accessToken');
+
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('isSignedIn', true);
+          await prefs.setString('access_token', accessToken);
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => ScrollableHome()),
+          );
+        } else {
+          print("Google login failed with status code: ${response.statusCode}");
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Google login failed. Please try again.')),
+          );
+        }
+      } else {
+        print("Google sign-in cancelled by user");
+      }
+    } catch (error) {
+      print("Error during Google sign-in: $error");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google Sign-In failed. Please try again.')),
       );
     }
-  } catch (error) {
-    print(error);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Google Sign-In failed. Please try again.')),
-    );
   }
-}
-
-
 
   Future<void> _setSignedIn(bool value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isSignedIn', value);
   }
-
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;

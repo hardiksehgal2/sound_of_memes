@@ -3,8 +3,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:ventures/MusicScreen/rotate_border.dart';
 import 'package:ventures/models/all_songs.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:ventures/models/liked_songs.dart';
 
 class Example extends StatefulWidget {
   final String songUrl;
@@ -12,6 +14,8 @@ class Example extends StatefulWidget {
   final String title;
   final String artist;
   final List<Songs> allSongs;
+  final List<Song>? allLikedSongs;
+
   final int currentIndex;
 
   const Example({
@@ -21,7 +25,7 @@ class Example extends StatefulWidget {
     required this.title,
     required this.artist,
     required this.allSongs,
-    required this.currentIndex,
+    required this.currentIndex, this.allLikedSongs,
   }) : super(key: key);
 
   @override
@@ -104,105 +108,134 @@ class _ExampleState extends State<Example> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.background,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          _title,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onBackground,
-          ),
-        ),
+  backgroundColor: Theme.of(context).colorScheme.background,
+  appBar: AppBar(
+    backgroundColor: Theme.of(context).colorScheme.background,
+    leading: IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () => Navigator.pop(context),
+    ),
+    title: Text(
+      _title,
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.onBackground,
       ),
-      body: Container(
-        color: Theme.of(context).colorScheme.primary, // Updated color
-        width: double.infinity,
-        height: double.infinity,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              StreamBuilder<SequenceState?>(
-                stream: _audioPlayer.sequenceStateStream,
-                builder: (context, snapshot) {
-                  final state = snapshot.data;
-                  if (state?.sequence.isEmpty ?? true) {
-                    return const SizedBox();
-                  }
-                  return Hero(
-                    tag: _imageUrl, // Use the same unique tag as in SongScreen
-                    child: CachedNetworkImage(
-                      imageUrl: _imageUrl,
-                      placeholder: (context, url) =>
-                          const CircularProgressIndicator(),
-                      errorWidget: (context, url, error) =>
-                          const Icon(Icons.error),
-                      fit: BoxFit.contain,
-                      width: 400,
-                      height: 600,
-                    ),
-                  );
-                },
-              ),
-
-              // const SizedBox(height: 10),
-              StreamBuilder<PositionData>(
-                stream: _positionDataStream,
-                builder: (context, snapshot) {
-                  final positionData = snapshot.data;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 30.0),
-                    child: ProgressBar(
-                      barHeight: 10,
-                      baseBarColor:
-                          Theme.of(context).colorScheme.inversePrimary,
-                      bufferedBarColor:
-                          Theme.of(context).colorScheme.background,
-                      progressBarColor: Colors.red,
-                      thumbColor: Colors.red,
-                      timeLabelTextStyle: TextStyle(
-                        color: Theme.of(context).colorScheme.onBackground,
-                        fontWeight: FontWeight.w600,
+    ),
+  ),
+  body: Container(
+    color: Theme.of(context).colorScheme.primary,
+    width: double.infinity,
+    height: double.infinity,
+    child: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          StreamBuilder<bool>(
+            stream: _audioPlayer.playingStream,
+            builder: (context, snapshot) {
+              final isPlaying = snapshot.data ?? false;
+              return AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: isPlaying
+                    ? Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: RotatingBorder(
+                          key: const ValueKey("rotatingBorder"),
+                          size: 500, // Same size for height and width as the original image
+                          borderWidth: 4.0, // Border width for the rotating effect
+                          child: Hero(
+                            tag: _imageUrl,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20.0),
+                              child: CachedNetworkImage(
+                                imageUrl: _imageUrl,
+                                placeholder: (context, url) =>
+                                    const CircularProgressIndicator(),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(Icons.error),
+                                fit: BoxFit.contain,
+                                width: 400, // Width of the image
+                                height: 600, // Height of the image
+                              ),
+                            ),
+                          ),
+                        ),
+                    )
+                    : Hero(
+                        key: const ValueKey("staticImage"),
+                        tag: _imageUrl,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20.0),
+                          child: CachedNetworkImage(
+                            imageUrl: _imageUrl,
+                            placeholder: (context, url) =>
+                                const CircularProgressIndicator(),
+                            errorWidget: (context, url, error) =>
+                                const Icon(Icons.error),
+                            fit: BoxFit.contain,
+                            width: 400, // Width of the image
+                            height: 500, // Height of the image
+                          ),
+                        ),
                       ),
-                      progress: positionData?.position ?? Duration.zero,
-                      buffered: positionData?.bufferedPosition ?? Duration.zero,
-                      total: positionData?.bufferDuration ?? Duration.zero,
-                      onSeek: _audioPlayer.seek,
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-              Text(
-                _title,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onBackground,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                _artist,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onBackground,
-                  fontSize: 18,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Controls(
-                audioPlayer: _audioPlayer,
-                onNext: _skipToNext,
-                onPrevious: _skipToPrevious,
-              ),
-            ],
+              );
+            },
           ),
-        ),
+          const SizedBox(height: 20),
+          StreamBuilder<PositionData>(
+            stream: _positionDataStream,
+            builder: (context, snapshot) {
+              final positionData = snapshot.data;
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                child: ProgressBar(
+                  barHeight: 10,
+                  baseBarColor: Theme.of(context).colorScheme.inversePrimary,
+                  bufferedBarColor: Theme.of(context).colorScheme.background,
+                  progressBarColor: Colors.red,
+                  thumbColor: Colors.red,
+                  timeLabelTextStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.onBackground,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  progress: positionData?.position ?? Duration.zero,
+                  buffered: positionData?.bufferedPosition ?? Duration.zero,
+                  total: positionData?.bufferDuration ?? Duration.zero,
+                  onSeek: _audioPlayer.seek,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 20),
+          Text(
+            _title,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onBackground,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            _artist,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onBackground,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Controls(
+            audioPlayer: _audioPlayer,
+            onNext: _skipToNext,
+            onPrevious: _skipToPrevious,
+          ),
+        ],
       ),
-    );
+    ),
+  ),
+);
+
+
+
   }
 }
 
@@ -252,13 +285,13 @@ class _ControlsState extends State<Controls> {
       children: [
         IconButton(
           iconSize: 20, // Increase icon size
-          icon: Icon(Icons.share, color: Colors.white), // Set icon color
+          icon: const Icon(Icons.share, color: Colors.white), // Set icon color
           onPressed: _share,
         ),
         IconButton(
           iconSize: 48, // Increase icon size
           icon:
-              Icon(Icons.skip_previous, color: Colors.white), // Set icon color
+              const Icon(Icons.skip_previous, color: Colors.white), // Set icon color
           onPressed: widget.onPrevious,
         ),
         StreamBuilder<PlayerState>(
@@ -270,7 +303,7 @@ class _ControlsState extends State<Controls> {
             if (playing != true) {
               return IconButton(
                 iconSize: 48, // Increase icon size
-                icon: Icon(Icons.play_arrow,
+                icon: const Icon(Icons.play_arrow,
                     color: Colors.white), // Set icon color
                 onPressed: () {
                   widget.audioPlayer.play();
@@ -279,7 +312,7 @@ class _ControlsState extends State<Controls> {
             } else if (processingState != ProcessingState.completed) {
               return IconButton(
                 iconSize: 48, // Increase icon size
-                icon: Icon(Icons.pause, color: Colors.white), // Set icon color
+                icon: const Icon(Icons.pause, color: Colors.white), // Set icon color
                 onPressed: () {
                   widget.audioPlayer.pause();
                 },
@@ -288,7 +321,7 @@ class _ControlsState extends State<Controls> {
             return IconButton(
               iconSize: 48, // Increase icon size
               icon:
-                  Icon(Icons.play_arrow, color: Colors.white), // Set icon color
+                  const Icon(Icons.play_arrow, color: Colors.white), // Set icon color
               onPressed: () {
                 widget.audioPlayer.seek(Duration.zero);
                 widget.audioPlayer.play();
@@ -298,7 +331,7 @@ class _ControlsState extends State<Controls> {
         ),
         IconButton(
           iconSize: 48, // Increase icon size
-          icon: Icon(Icons.skip_next, color: Colors.white), // Set icon color
+          icon: const Icon(Icons.skip_next, color: Colors.white), // Set icon color
           onPressed: widget.onNext,
         ),
         IconButton(

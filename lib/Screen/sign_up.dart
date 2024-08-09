@@ -1,8 +1,10 @@
+// ignore_for_file: avoid_print
+
 import 'package:animate_do/animate_do.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -19,19 +21,7 @@ class SignUp extends StatefulWidget {
 }
 
 class _SignUpState extends State<SignUp> {
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  User? _user;
-
-  @override
-  void initState() {
-    super.initState();
-    _firebaseAuth.authStateChanges().listen((event) {
-      setState(() {
-        _user = event;
-      });
-    });
-  }
-
+  
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
@@ -41,6 +31,8 @@ class _SignUpState extends State<SignUp> {
 
   bool isFlat = true;
   bool _isLoading = false;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+
 
   Future<void> _signup() async {
     if (_formKey.currentState!.validate()) {
@@ -102,24 +94,60 @@ class _SignUpState extends State<SignUp> {
     );
   }
 
-  void _handleGoogleSignIn() async {
+  Future<void> _handleGoogleSignIn() async {
     try {
-      GoogleAuthProvider _googleAuthProvider = GoogleAuthProvider();
-      UserCredential userCredential =
-          await _firebaseAuth.signInWithProvider(_googleAuthProvider);
-      if (userCredential.user != null) {
-        await _setSignedIn(true);
-        print('');
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const ScrollableHome()),
+      GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+      if (googleUser != null) {
+        print("Google sign-in successful");
+        print("Name: ${googleUser.displayName}");
+        print("Email: ${googleUser.email}");
+        print("Profile Picture URL: ${googleUser.photoUrl}");
+
+        var body = jsonEncode({
+          "name": googleUser.displayName,
+          "email": googleUser.email,
+          "picture": googleUser.photoUrl,
+        });
+
+        final url = Uri.parse('https://api.soundofmeme.com/googlelogin');
+        print("Sending POST request to $url with body: $body");
+
+        var response = await http.post(
+          url,
+          headers: {
+            "Content-Type": "application/json; charset=UTF-8",
+          },
+          body: body,
         );
+
+        if (response.statusCode == 200) {
+          print("Google login successful");
+          final responseData = jsonDecode(response.body);
+          final accessToken = responseData['access_token'];
+          print('Received access token: $accessToken');
+
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('isSignedIn', true);
+          await prefs.setString('access_token', accessToken);
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const ScrollableHome()),
+          );
+        } else {
+          print("Google login failed with status code: ${response.statusCode}");
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Google login failed. Please try again.')),
+          );
+        }
+      } else {
+        print("Google sign-in cancelled by user");
       }
     } catch (error) {
-      print("Error $error");
+      print("Error during Google sign-in: $error");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Google Sign-In failed. Please try again.')),
+        const SnackBar(content: Text('Google Sign-In failed. Please try again.')),
       );
     }
   }

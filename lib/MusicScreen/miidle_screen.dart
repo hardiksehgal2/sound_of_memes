@@ -1,8 +1,14 @@
+// ignore_for_file: avoid_print, prefer_const_constructors, sort_child_properties_last
+
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class SongCreationBottomSheet extends StatefulWidget {
   @override
-  _SongCreationBottomSheetState createState() => _SongCreationBottomSheetState();
+  _SongCreationBottomSheetState createState() =>
+      _SongCreationBottomSheetState();
 }
 
 class _SongCreationBottomSheetState extends State<SongCreationBottomSheet> {
@@ -10,9 +16,18 @@ class _SongCreationBottomSheetState extends State<SongCreationBottomSheet> {
   List<String> selectedGenres = [];
   final TextEditingController songTitleController = TextEditingController();
   final TextEditingController lyricsController = TextEditingController();
-  final TextEditingController genreDescriptionController = TextEditingController();
+  final TextEditingController genreDescriptionController =
+      TextEditingController();
 
-  final List<String> genres = ['Pop', 'Rock', 'Jazz', 'Blues', 'Classical', 'Country', 'Electronic'];
+  final List<String> genres = [
+    'Pop',
+    'Rock',
+    'Jazz',
+    'Blues',
+    'Classical',
+    'Country',
+    'Electronic'
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -43,10 +58,13 @@ class _SongCreationBottomSheetState extends State<SongCreationBottomSheet> {
               if (!isCreateSelected) ...[
                 _buildInputField('Song Title', songTitleController),
                 const SizedBox(height: 10),
-                _buildInputField('Lyrics of your song', lyricsController, maxLines: 5),
+                _buildInputField('Lyrics of your song', lyricsController,
+                    maxLines: 5),
               ],
               const SizedBox(height: 10),
-              _buildInputField('Genre and description', genreDescriptionController, maxLines: 3),
+              _buildInputField(
+                  'Genre and description', genreDescriptionController,
+                  maxLines: 3),
               const SizedBox(height: 10),
               _buildGenreChips(),
               const SizedBox(height: 20),
@@ -104,7 +122,8 @@ class _SongCreationBottomSheetState extends State<SongCreationBottomSheet> {
     );
   }
 
-  Widget _buildInputField(String hint, TextEditingController? controller, {int maxLines = 1}) {
+  Widget _buildInputField(String hint, TextEditingController? controller,
+      {int maxLines = 1}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: TextField(
@@ -155,7 +174,8 @@ class _SongCreationBottomSheetState extends State<SongCreationBottomSheet> {
               },
               backgroundColor: const Color(0xFF2A2A2A),
               selectedColor: const Color(0xFF4CAF50),
-              labelStyle: TextStyle(color: isSelected ? Colors.black : Colors.white),
+              labelStyle:
+                  TextStyle(color: isSelected ? Colors.black : Colors.white),
             ),
           );
         }).toList(),
@@ -163,13 +183,60 @@ class _SongCreationBottomSheetState extends State<SongCreationBottomSheet> {
     );
   }
 
+  Future<void> _createSong() async {
+    if (_validateInputs()) {
+      final bearerToken = await _getToken();
+      if (bearerToken != null) {
+        print("Token $bearerToken");
+
+        // Show message and navigate back immediately
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'It might take some time, it will be displayed in My creations')),
+        );
+        Navigator.pop(context); // Navigate back immediately
+
+        // Continue the song creation in the background
+        if (isCreateSelected) {
+          await createSong(bearerToken);
+        } else {
+          await customCreateSong(bearerToken);
+        }
+      } else {
+        // Display an error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Failed to create song. Please try again later.')),
+        );
+      }
+    }
+  }
+
+  bool _validateInputs() {
+    if (!isCreateSelected &&
+        (songTitleController.text.isEmpty || lyricsController.text.isEmpty)) {
+      // Display an error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please fill in the song title and lyrics.')),
+      );
+      return false;
+    }
+    if (genreDescriptionController.text.isEmpty || selectedGenres.isEmpty) {
+      // Display an error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please select at least one genre.')),
+      );
+      return false;
+    }
+    return true;
+  }
+
   Widget _buildCreateButton() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: ElevatedButton(
-        onPressed: () {
-          // Implement song creation logic here
-        },
+        onPressed: _createSong,
         child: const Text('Create Song', style: TextStyle(color: Colors.white)),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF4CAF50),
@@ -180,5 +247,70 @@ class _SongCreationBottomSheetState extends State<SongCreationBottomSheet> {
         ),
       ),
     );
+  }
+
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('access_token');
+    print('Retrieved token: $token');
+    return token;
+  }
+
+  Future<void> createSong(String bearerToken) async {
+    print('Starting to create song...');
+    final url = Uri.parse('https://api.soundofmeme.com/create');
+
+    final body = {
+      'song': genreDescriptionController.text,
+    };
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $bearerToken',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200) {
+        print('Song created successfully! Response: ${response.body}');
+      } else {
+        print('Error creating song: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print('Error creating song: $e');
+    }
+  }
+
+  Future<void> customCreateSong(String bearerToken) async {
+    print('Starting to custom create song...');
+    final url = Uri.parse('https://api.soundofmeme.com/createcustom');
+
+    final body = {
+      'title': songTitleController.text,
+      'lyric': lyricsController.text,
+      'genere': selectedGenres.join(', '),
+    };
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $bearerToken',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+      if (response.statusCode == 200) {
+        print('Custom song created successfully! Response: ${response.body}');
+      } else {
+        print(
+            'Error creating custom song: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print('Error creating custom song: $e');
+    }
   }
 }
