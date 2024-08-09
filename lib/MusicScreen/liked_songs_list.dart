@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_literals_to_create_immutables
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
@@ -102,7 +104,7 @@ class _LikedSongsListState extends State<LikedSongsList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Liked Songs'),
+        title: const Text('Liked Songs'),
       ),
       body: _isLoading
           ? ListView.builder(
@@ -119,7 +121,7 @@ class _LikedSongsListState extends State<LikedSongsList> {
                       ),
                       elevation: 5,
                       child: ListTile(
-                        contentPadding: EdgeInsets.all(10),
+                        contentPadding: const EdgeInsets.all(10),
                         leading: Container(
                           width: 60,
                           height: 60,
@@ -141,7 +143,7 @@ class _LikedSongsListState extends State<LikedSongsList> {
                               height: 14,
                               color: Colors.grey[300],
                             ),
-                            SizedBox(height: 5),
+                            const SizedBox(height: 5),
                             Row(
                               children: [
                                 Container(
@@ -149,7 +151,7 @@ class _LikedSongsListState extends State<LikedSongsList> {
                                   height: 14,
                                   color: Colors.grey[300],
                                 ),
-                                SizedBox(width: 5),
+                                const SizedBox(width: 5),
                                 Container(
                                   width: 30,
                                   height: 14,
@@ -181,7 +183,7 @@ class _LikedSongsListState extends State<LikedSongsList> {
                     ),
                     elevation: 5,
                     child: ListTile(
-                      contentPadding: EdgeInsets.all(10),
+                      contentPadding: const EdgeInsets.all(10),
                       leading: ClipRRect(
                         borderRadius: BorderRadius.circular(10),
                         child: Image.network(
@@ -193,21 +195,21 @@ class _LikedSongsListState extends State<LikedSongsList> {
                       ),
                       title: Text(
                         song.songName,
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('By ${song.username}'),
-                          SizedBox(height: 5),
+                          const SizedBox(height: 5),
                           Row(
                             children: [
-                              Icon(Icons.thumb_up, color: Colors.green),
-                              SizedBox(width: 5),
+                              const Icon(Icons.thumb_up, color: Colors.green),
+                              const SizedBox(width: 5),
                               Text('${song.likes}'),
-                              SizedBox(width: 15),
-                              Icon(Icons.visibility, color: Colors.blue),
-                              SizedBox(width: 5),
+                              const SizedBox(width: 15),
+                              const Icon(Icons.visibility, color: Colors.blue),
+                              const SizedBox(width: 5),
                               Text('${song.views}'),
                             ],
                           ),

@@ -6,13 +6,15 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:page_animation_transition/animations/bottom_to_top_faded_transition.dart';
-import 'package:page_animation_transition/animations/bottom_to_top_transition.dart';
-import 'package:page_animation_transition/animations/right_to_left_faded_transition.dart';
+// import 'package:page_animation_transition/animations/bottom_to_top_faded_transition.dart';
+// import 'package:page_animation_transition/animations/bottom_to_top_transition.dart';
+// import 'package:page_animation_transition/animations/right_to_left_faded_transition.dart';
 import 'package:page_animation_transition/page_animation_transition.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:ventures/MusicScreen/custom_button';
+// import 'package:ventures/MusicScreen/custom_button';
 // import 'package:ventures/MusicScreen/custom_button.dart';
 import 'package:ventures/MusicScreen/example.dart';
+import 'package:ventures/MusicScreen/search_screen.dart';
 import 'package:ventures/Screen/splash_screen.dart';
 import 'package:ventures/components/my_drawer.dart';
 import 'package:ventures/models/all_songs.dart';
@@ -289,18 +291,28 @@ class _SongScreenState extends State<SongScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            color: Theme.of(context).colorScheme.primary,
-            icon: const CircleAvatar(
-              backgroundImage: AssetImage('assets/images/pepe_calm.png'),
-            ),
-            onPressed: _showLogoutDialog,
+        IconButton(
+          icon: Icon(Icons.search),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SearchScreen()),
+            );
+          },
+        ),
+        IconButton(
+          color: Theme.of(context).colorScheme.primary,
+          icon: const CircleAvatar(
+            backgroundImage: AssetImage('assets/images/pepe_calm.png'),
           ),
-        ],
+          onPressed: _showLogoutDialog,
+        ),
+      ],
       ),
       backgroundColor: Theme.of(context).colorScheme.background,
       drawer: const MyDrawer(),
-      body: NotificationListener<ScrollNotification>(
+      body:
+       NotificationListener<ScrollNotification>(
         onNotification: (scrollInfo) {
           if (!_isLoading &&
               scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {

@@ -7,13 +7,15 @@ import 'package:ventures/MusicScreen/rotate_border.dart';
 import 'package:ventures/models/all_songs.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:ventures/models/liked_songs.dart';
+import 'package:ventures/models/search_songs.dart';
 
 class Example extends StatefulWidget {
   final String songUrl;
   final String imageUrl;
   final String title;
   final String artist;
-  final List<Songs> allSongs;
+  final List<Songs>? allSongs;
+   final List<SearchSongs>? allSearchSongs;
   final List<Song>? allLikedSongs;
 
   final int currentIndex;
@@ -24,8 +26,8 @@ class Example extends StatefulWidget {
     required this.imageUrl,
     required this.title,
     required this.artist,
-    required this.allSongs,
-    required this.currentIndex, this.allLikedSongs,
+     this.allSongs,
+    required this.currentIndex, this.allLikedSongs, this.allSearchSongs,
   }) : super(key: key);
 
   @override
@@ -63,16 +65,32 @@ class _ExampleState extends State<Example> {
 
   Future<void> _init() async {
     await _audioPlayer.setLoopMode(LoopMode.all);
-    await _playCurrentSong();
+    _playCurrentSong();
   }
 
   Future<void> _playCurrentSong() async {
-    final song = widget.allSongs[_currentIndex];
-    await _audioPlayer.setAudioSource(AudioSource.uri(Uri.parse(song.songUrl)));
+  if (widget.allSongs!.isEmpty) {
+    print('No songs available to play.');
+    return;
   }
 
+  if (_currentIndex < 0 || _currentIndex >= widget.allSongs!.length) {
+    print('Error: _currentIndex out of range.');
+    _currentIndex = 0; // Reset to a valid index if needed
+  }
+
+  final song = widget.allSongs![_currentIndex];
+  try {
+    await _audioPlayer.setAudioSource(AudioSource.uri(Uri.parse(song.songUrl)));
+  } catch (e) {
+    print('Error playing song: $e');
+  }
+}
+
+
+
   void _updateSongDetails() {
-    final song = widget.allSongs[_currentIndex];
+    final song = widget.allSongs![_currentIndex];
     setState(() {
       _songUrl = song.songUrl;
       _imageUrl = song.imageUrl;
@@ -83,7 +101,7 @@ class _ExampleState extends State<Example> {
 
   void _skipToNext() {
     setState(() {
-      _currentIndex = (_currentIndex + 1) % widget.allSongs.length;
+      _currentIndex = (_currentIndex + 1) % widget.allSongs!.length;
       _updateSongDetails();
       _playCurrentSong();
     });
@@ -92,7 +110,7 @@ class _ExampleState extends State<Example> {
   void _skipToPrevious() {
     setState(() {
       _currentIndex =
-          (_currentIndex - 1 + widget.allSongs.length) % widget.allSongs.length;
+          (_currentIndex - 1 + widget.allSongs!.length) % widget.allSongs!.length;
       _updateSongDetails();
       _playCurrentSong();
     });
