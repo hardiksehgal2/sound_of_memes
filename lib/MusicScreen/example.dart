@@ -44,8 +44,9 @@ class _ExampleState extends State<Example> {
   late String _imageUrl;
   late String _title;
   late String _artist;
-  late List<Song>? _allLikedSongs;
   late List<Songs>? _allSongs;
+  late List<SearchSongs>? _allSearchSongs;
+  late List<Song>? _allLikedSongs;
 
   Stream<PositionData> get _positionDataStream =>
       Rx.combineLatest3<Duration, Duration, Duration?, PositionData>(
@@ -64,8 +65,9 @@ class _ExampleState extends State<Example> {
     super.initState();
     _audioPlayer = AudioPlayer();
     _currentIndex = widget.currentIndex;
-    _allLikedSongs = widget.allLikedSongs;
     _allSongs = widget.allSongs;
+    _allSearchSongs = widget.allSearchSongs;
+    _allLikedSongs = widget.allLikedSongs;
     _updateSongDetails();
     _init();
   }
@@ -76,60 +78,60 @@ class _ExampleState extends State<Example> {
   }
 
   Future<void> _playCurrentSong() async {
+    // Determine the source of the song
+    List<dynamic>? songList;
     if (_allSongs != null && _allSongs!.isNotEmpty) {
-      if (_currentIndex < 0 || _currentIndex >= _allSongs!.length) {
-        print('Error: _currentIndex out of range for allSongs.');
-        _currentIndex = 0; // Reset to a valid index if needed
-      }
-      final song = _allSongs![_currentIndex];
-      try {
-        await _audioPlayer.setAudioSource(AudioSource.uri(Uri.parse(song.songUrl)));
-      } catch (e) {
-        print('Error playing song from allSongs: $e');
-      }
+      songList = _allSongs;
+    } else if (_allSearchSongs != null && _allSearchSongs!.isNotEmpty) {
+      songList = _allSearchSongs;
     } else if (_allLikedSongs != null && _allLikedSongs!.isNotEmpty) {
-      if (_currentIndex < 0 || _currentIndex >= _allLikedSongs!.length) {
-        print('Error: _currentIndex out of range for allLikedSongs.');
-        _currentIndex = 0; // Reset to a valid index if needed
-      }
-      final likedsong = _allLikedSongs![_currentIndex];
-      try {
-        await _audioPlayer.setAudioSource(AudioSource.uri(Uri.parse(likedsong.songUrl)));
-      } catch (e) {
-        print('Error playing song from allLikedSongs: $e');
-      }
-    } else {
+      songList = _allLikedSongs;
+    }
+
+    if (songList == null || songList.isEmpty) {
       print('No songs available to play.');
+      return;
+    }
+
+    if (_currentIndex < 0 || _currentIndex >= songList.length) {
+      print('Error: _currentIndex out of range.');
+      _currentIndex = 0; // Reset to a valid index if needed
+    }
+
+    final song = songList[_currentIndex];
+    try {
+      await _audioPlayer.setAudioSource(AudioSource.uri(Uri.parse(song.songUrl)));
+    } catch (e) {
+      print('Error playing song: $e');
     }
   }
 
   void _updateSongDetails() {
+    List<dynamic>? songList;
     if (_allSongs != null && _allSongs!.isNotEmpty) {
-      final song = _allSongs![_currentIndex];
-      setState(() {
-        _songUrl = song.songUrl;
-        _imageUrl = song.imageUrl;
-        _title = song.songName;
-        _artist = song.userId ?? 'Unknown Artist';
-      });
+      songList = _allSongs;
+    } else if (_allSearchSongs != null && _allSearchSongs!.isNotEmpty) {
+      songList = _allSearchSongs;
     } else if (_allLikedSongs != null && _allLikedSongs!.isNotEmpty) {
-      final likedsong = _allLikedSongs![_currentIndex];
-      setState(() {
-        _songUrl = likedsong.songUrl;
-        _imageUrl = likedsong.imageUrl;
-        _title = likedsong.songName;
-        _artist = likedsong.userId ?? 'Unknown Artist';
-      });
+      songList = _allLikedSongs;
     }
+
+    if (songList == null || songList.isEmpty) {
+      return;
+    }
+
+    final song = songList[_currentIndex];
+    setState(() {
+      _songUrl = song.songUrl;
+      _imageUrl = song.imageUrl;
+      _title = song.songName;
+      _artist = song.userId ?? 'Unknown Artist';
+    });
   }
 
   void _skipToNext() {
     setState(() {
-      if (_allSongs != null && _allSongs!.isNotEmpty) {
-        _currentIndex = (_currentIndex + 1) % _allSongs!.length;
-      } else if (_allLikedSongs != null && _allLikedSongs!.isNotEmpty) {
-        _currentIndex = (_currentIndex + 1) % _allLikedSongs!.length;
-      }
+      _currentIndex = (_currentIndex + 1) % (_allSongs?.length ?? (_allSearchSongs?.length ?? _allLikedSongs!.length));
       _updateSongDetails();
       _playCurrentSong();
     });
@@ -137,11 +139,8 @@ class _ExampleState extends State<Example> {
 
   void _skipToPrevious() {
     setState(() {
-      if (_allSongs != null && _allSongs!.isNotEmpty) {
-        _currentIndex = (_currentIndex - 1 + _allSongs!.length) % _allSongs!.length;
-      } else if (_allLikedSongs != null && _allLikedSongs!.isNotEmpty) {
-        _currentIndex = (_currentIndex - 1 + _allLikedSongs!.length) % _allLikedSongs!.length;
-      }
+      _currentIndex = (_currentIndex - 1 + (_allSongs?.length ?? (_allSearchSongs?.length ?? _allLikedSongs!.length))) %
+          (_allSongs?.length ?? (_allSearchSongs?.length ?? _allLikedSongs!.length));
       _updateSongDetails();
       _playCurrentSong();
     });
@@ -189,8 +188,10 @@ class _ExampleState extends State<Example> {
                             padding: const EdgeInsets.all(8.0),
                             child: RotatingBorder(
                               key: const ValueKey("rotatingBorder"),
-                              size: 500,
-                              borderWidth: 4.0,
+                              size:
+                                  500, // Same size for height and width as the original image
+                              borderWidth:
+                                  4.0, // Border width for the rotating effect
                               child: Hero(
                                 tag: _imageUrl,
                                 child: ClipRRect(
@@ -202,8 +203,8 @@ class _ExampleState extends State<Example> {
                                     errorWidget: (context, url, error) =>
                                         const Icon(Icons.error),
                                     fit: BoxFit.contain,
-                                    width: 400,
-                                    height: 600,
+                                    width: 400, // Width of the image
+                                    height: 600, // Height of the image
                                   ),
                                 ),
                               ),
@@ -221,8 +222,8 @@ class _ExampleState extends State<Example> {
                                 errorWidget: (context, url, error) =>
                                     const Icon(Icons.error),
                                 fit: BoxFit.contain,
-                                width: 400,
-                                height: 500,
+                                width: 400, // Width of the image
+                                height: 500, // Height of the image
                               ),
                             ),
                           ),
@@ -285,6 +286,7 @@ class _ExampleState extends State<Example> {
     );
   }
 }
+
 class PositionData {
   final Duration position;
   final Duration bufferedPosition;

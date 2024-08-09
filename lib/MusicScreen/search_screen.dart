@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ventures/MusicScreen/example.dart';
 import 'package:ventures/MusicScreen/fetch_song_slug.dart';
 import 'package:ventures/models/search_songs.dart';
 
@@ -179,8 +180,23 @@ class _SearchScreenState extends State<SearchScreen> {
 
     print('Search result: $_searchResult');
   }
+   void _navigateToExample() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Example(
+          songUrl: _searchResult!.songUrl,
+          imageUrl: _searchResult!.imageUrl,
+          title: _searchResult!.songName,
+          artist: _searchResult!.userId ?? 'Unknown Artist',
+          allSearchSongs: [_searchResult!], // Pass the searched song
+          currentIndex: 0,
+        ),
+      ),
+    );
+  }
 
-  @override
+ @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -218,69 +234,72 @@ class _SearchScreenState extends State<SearchScreen> {
                         ? Expanded(
                             child: ListView(
                               children: [
-                                Card(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Image.network(
-                                            _searchResult!.imageUrl,
-                                            fit: BoxFit.fill,
-                                            width: double.infinity,
-                                            height: 400,
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text(
-                                            _searchResult!.songName,
-                                            style: GoogleFonts.poppins(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 22,
+                                GestureDetector(
+                                  onTap: _navigateToExample, // Navigate on tap
+                                  child: Card(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Image.network(
+                                              _searchResult!.imageUrl,
+                                              fit: BoxFit.fill,
+                                              width: double.infinity,
+                                              height: 400,
                                             ),
                                           ),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8.0),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                            children: [
-                                              IconButton(
-                                                icon: Icon(
-                                                  Icons.favorite,
-                                                  size: 24,
-                                                  color: _isLiked(_searchResult!.songId) ? Colors.pink : Colors.grey,
-                                                ),
-                                                onPressed: () => _toggleLike(_searchResult!.songId),
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                              _searchResult!.songName,
+                                              style: GoogleFonts.poppins(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 22,
                                               ),
-                                              Text(
-                                                '${_likedSongs.contains(_searchResult!.songId) ? _searchResult!.likes + (_isLiked(_searchResult!.songId) ? 1 : 0) : _searchResult!.likes}',
-                                                style: GoogleFonts.poppins(fontSize: 16),
-                                              ),
-                                              IconButton(
-                                                icon: Icon(
-                                                  Icons.thumb_down_alt,
-                                                  size: 24,
-                                                  color: _isdisLiked(_searchResult!.songId) ? Colors.blue : Colors.grey,
-                                                ),
-                                                onPressed: () => _toggleDislike(_searchResult!.songId),
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                '${_searchResult!.views}',
-                                                style: GoogleFonts.poppins(fontSize: 16),
-                                              ),
-                                            ],
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        // Optionally display lyrics here
-                                      ],
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 8.0),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                              children: [
+                                                IconButton(
+                                                  icon: Icon(
+                                                    Icons.favorite,
+                                                    size: 24,
+                                                    color: _isLiked(_searchResult!.songId) ? Colors.pink : Colors.grey,
+                                                  ),
+                                                  onPressed: () => _toggleLike(_searchResult!.songId),
+                                                ),
+                                                Text(
+                                                  '${_likedSongs.contains(_searchResult!.songId) ? _searchResult!.likes + (_isLiked(_searchResult!.songId) ? 1 : 0) : _searchResult!.likes}',
+                                                  style: GoogleFonts.poppins(fontSize: 16),
+                                                ),
+                                                IconButton(
+                                                  icon: Icon(
+                                                    Icons.thumb_down_alt,
+                                                    size: 24,
+                                                    color: _isdisLiked(_searchResult!.songId) ? Colors.blue : Colors.grey,
+                                                  ),
+                                                  onPressed: () => _toggleDislike(_searchResult!.songId),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  '${_searchResult!.views}',
+                                                  style: GoogleFonts.poppins(fontSize: 16),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 10),
+                                          // Optionally display lyrics here
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
