@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
@@ -107,7 +108,7 @@ class _LikedSongsListState extends State<LikedSongsList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Liked Songs'),
+        title:  Text('Liked Songs',style:  GoogleFonts.pottaOne(fontWeight: FontWeight.bold,)),
       ),
       body: _isLoading
           ? ListView.builder(
@@ -179,7 +180,7 @@ class _LikedSongsListState extends State<LikedSongsList> {
 
                 final likedsong = _likesongs[index];
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                  padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 16.0),
                   child: Card(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
@@ -192,28 +193,28 @@ class _LikedSongsListState extends State<LikedSongsList> {
                         child: Image.network(
                           likedsong.imageUrl,
                           width: 60,
-                          height: 60,
-                          fit: BoxFit.cover,
+                          height: 120,
+                          fit: BoxFit.fill,
                         ),
                       ),
                       title: Text(
                         likedsong.songName,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style:  GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('By ${likedsong.username}'),
+                          Text('By ${likedsong.username}',style:  GoogleFonts.poppins(fontWeight: FontWeight.bold,)),
                           const SizedBox(height: 5),
                           Row(
                             children: [
-                              const Icon(Icons.thumb_up, color: Colors.green),
+                              const Icon(Icons.favorite, color: Colors.pink,size: 15,),
                               const SizedBox(width: 5),
-                              Text('${likedsong.likes}'),
+                              Text('${likedsong.likes}',style:  GoogleFonts.poppins(fontWeight: FontWeight.bold,)),
                               const SizedBox(width: 15),
-                              const Icon(Icons.visibility, color: Colors.blue),
+                              const Icon(Icons.visibility, color: Colors.blue,size: 15,),
                               const SizedBox(width: 5),
-                              Text('${likedsong.views}'),
+                              Text('${likedsong.views}',style:  GoogleFonts.poppins(fontWeight: FontWeight.bold,)),
                             ],
                           ),
                         ],

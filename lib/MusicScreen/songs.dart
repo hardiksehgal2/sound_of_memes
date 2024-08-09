@@ -243,19 +243,30 @@ class _SongScreenState extends State<SongScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Do you want to logout?'),
+        title:  Text('Logout',style: GoogleFonts.pottaOne(
+          fontSize: 18,
+          color: Theme.of(context).colorScheme.inversePrimary,
+        ),),
+        content:  Text('Do you want to logout?',style: GoogleFonts.poppins(
+          fontSize: 18,
+        ),),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child:  Text('Cancel',style: GoogleFonts.poppins(
+          fontSize: 14,
+          color:Theme.of(context).colorScheme.inversePrimary,
+        ),),
           ),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               _logout();
             },
-            child: const Text('Logout'),
+            child:  Text('Logout',style: GoogleFonts.poppins(
+          fontSize: 14,
+          color:Theme.of(context).colorScheme.inversePrimary,
+        ),),
           ),
         ],
       ),

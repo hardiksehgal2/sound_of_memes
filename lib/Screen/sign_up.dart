@@ -283,7 +283,10 @@ class _SignUpState extends State<SignUp> {
                   children: [
                     Text(
                       "Not a member?",
-                      style: GoogleFonts.poppins(),
+                      style: GoogleFonts.poppins(
+                          color: Colors.black, // Hint text color
+                          fontSize: 13,
+                        ),
                     ),
                     TextButton(
                       onPressed: () {
@@ -379,7 +382,10 @@ class _SignUpState extends State<SignUp> {
                     )
                   : null,
             ),
-            style: GoogleFonts.poppins(),
+            style: GoogleFonts.poppins(
+                          color: Colors.black, // Hint text color
+                          fontSize: 19,
+                        ),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'This field cannot be empty';

@@ -51,6 +51,7 @@ dependencies:
   simple_waveform_progressbar: ^0.0.3
   flutter_sequence_animation: ^4.0.0
   page_animation_transition: ^1.0.0
+  glowy_borders: ^1.0.2
 
 flutter_launcher_icons:
   android: "launcher_icon"

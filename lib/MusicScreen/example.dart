@@ -3,6 +3,7 @@
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:ventures/MusicScreen/rotate_border.dart';
@@ -164,13 +165,23 @@ class _ExampleState extends State<Example> {
         ),
         title: Text(
           _title,
-          style: TextStyle(
+          style: GoogleFonts.pottaOne(
             color: Theme.of(context).colorScheme.onBackground,
           ),
         ),
       ),
       body: Container(
-        color: Theme.of(context).colorScheme.primary,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [
+        Theme.of(context).colorScheme.background,    // Deep Purple
+        Theme.of(context).colorScheme.primary, // Teal Green
+        Theme.of(context).colorScheme.secondary,     // Vivid Violet
+        Theme.of(context).colorScheme.inversePrimary,       // Bright Pink
+      ],
+       begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,)
+        ),
+        // color: Theme.of(context).colorScheme.primary,
         width: double.infinity,
         height: double.infinity,
         child: Center(
@@ -203,7 +214,7 @@ class _ExampleState extends State<Example> {
                                     errorWidget: (context, url, error) =>
                                         const Icon(Icons.error),
                                     fit: BoxFit.contain,
-                                    width: 400, // Width of the image
+                                    width: 420, // Width of the image
                                     height: 600, // Height of the image
                                   ),
                                 ),
@@ -240,12 +251,12 @@ class _ExampleState extends State<Example> {
                     child: ProgressBar(
                       barHeight: 10,
                       baseBarColor:
-                          Theme.of(context).colorScheme.inversePrimary,
+                          Theme.of(context).colorScheme.primary,
                       bufferedBarColor:
-                          Theme.of(context).colorScheme.background,
+                          Theme.of(context).colorScheme.secondary,
                       progressBarColor: Colors.red,
                       thumbColor: Colors.red,
-                      timeLabelTextStyle: TextStyle(
+                      timeLabelTextStyle: GoogleFonts.poppins(
                         color: Theme.of(context).colorScheme.onBackground,
                         fontWeight: FontWeight.w600,
                       ),
@@ -260,16 +271,16 @@ class _ExampleState extends State<Example> {
               const SizedBox(height: 20),
               Text(
                 _title,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onBackground,
+                style: GoogleFonts.poppins(
+                  color: Theme.of(context).colorScheme.background,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
                 _artist,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onBackground,
+                style: GoogleFonts.poppins(
+                  color: Theme.of(context).colorScheme.background,
                   fontSize: 18,
                 ),
               ),
@@ -333,13 +344,13 @@ class _ControlsState extends State<Controls> {
       children: [
         IconButton(
           iconSize: 20, // Increase icon size
-          icon: const Icon(Icons.share, color: Colors.white), // Set icon color
+          icon:  Icon(Icons.share, color: Theme.of(context).colorScheme.background), // Set icon color
           onPressed: _share,
         ),
         IconButton(
           iconSize: 48, // Increase icon size
-          icon: const Icon(Icons.skip_previous,
-              color: Colors.white), // Set icon color
+          icon:  Icon(Icons.skip_previous,
+              color: Theme.of(context).colorScheme.background), // Set icon color
           onPressed: widget.onPrevious,
         ),
         StreamBuilder<PlayerState>(
@@ -351,8 +362,8 @@ class _ControlsState extends State<Controls> {
             if (playing != true) {
               return IconButton(
                 iconSize: 48, // Increase icon size
-                icon: const Icon(Icons.play_arrow,
-                    color: Colors.white), // Set icon color
+                icon:  Icon(Icons.play_arrow,
+                    color:Theme.of(context).colorScheme.background), // Set icon color
                 onPressed: () {
                   widget.audioPlayer.play();
                 },
@@ -360,8 +371,8 @@ class _ControlsState extends State<Controls> {
             } else if (processingState != ProcessingState.completed) {
               return IconButton(
                 iconSize: 48, // Increase icon size
-                icon: const Icon(Icons.pause,
-                    color: Colors.white), // Set icon color
+                icon:  Icon(Icons.pause,
+                    color: Theme.of(context).colorScheme.background), // Set icon color
                 onPressed: () {
                   widget.audioPlayer.pause();
                 },
@@ -369,8 +380,8 @@ class _ControlsState extends State<Controls> {
             }
             return IconButton(
               iconSize: 48, // Increase icon size
-              icon: const Icon(Icons.play_arrow,
-                  color: Colors.white), // Set icon color
+              icon:  Icon(Icons.play_arrow,
+                  color: Theme.of(context).colorScheme.background), // Set icon color
               onPressed: () {
                 widget.audioPlayer.seek(Duration.zero);
                 widget.audioPlayer.play();
@@ -380,14 +391,14 @@ class _ControlsState extends State<Controls> {
         ),
         IconButton(
           iconSize: 48, // Increase icon size
-          icon: const Icon(Icons.skip_next,
-              color: Colors.white), // Set icon color
+          icon:  Icon(Icons.skip_next,
+              color: Theme.of(context).colorScheme.background), // Set icon color
           onPressed: widget.onNext,
         ),
         IconButton(
           iconSize: 20, // Increase icon size
           icon: Icon(_isMuted ? Icons.volume_off : Icons.volume_up,
-              color: Colors.white), // Set icon color
+              color: Theme.of(context).colorScheme.background), // Set icon color
           onPressed: _toggleMute,
         ),
       ],
@@ -435,8 +446,8 @@ class MediaMetaData extends StatelessWidget {
         const SizedBox(height: 20),
         Text(
           title,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onBackground,
+          style: GoogleFonts.poppins(
+            color: Theme.of(context).colorScheme.background,
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
@@ -445,8 +456,8 @@ class MediaMetaData extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           artist,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onBackground,
+          style: GoogleFonts.poppins(
+            color: Theme.of(context).colorScheme.background,
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),

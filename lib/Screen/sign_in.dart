@@ -159,6 +159,7 @@ class _SignInState extends State<SignIn> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isSignedIn', value);
   }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -245,7 +246,10 @@ class _SignInState extends State<SignIn> {
                             fontSize: 19,
                           ),
                         ),
-                        style: GoogleFonts.poppins(),
+                        style: GoogleFonts.poppins(
+                          color: Colors.black, // Hint text color
+                          fontSize: 19,
+                        ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Email should not be empty';
@@ -284,6 +288,7 @@ class _SignInState extends State<SignIn> {
                             color: Colors.black45,
                             fontSize: 19,
                           ),
+                          
                           suffixIcon: IconButton(
                             icon: Icon(
                               _isObscure
@@ -298,7 +303,10 @@ class _SignInState extends State<SignIn> {
                             },
                           ),
                         ),
-                        style: GoogleFonts.poppins(),
+                       style: GoogleFonts.poppins(
+                          color: Colors.black, // Hint text color
+                          fontSize: 19,
+                        ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Password should not be empty';
@@ -372,7 +380,10 @@ class _SignInState extends State<SignIn> {
                   children: [
                     Text(
                       "Not a member?",
-                      style: GoogleFonts.poppins(),
+                      style: GoogleFonts.poppins(
+                          color: Colors.black, // Hint text color
+                          fontSize: 13,
+                        ),
                     ),
                     TextButton(
                       onPressed: () {
