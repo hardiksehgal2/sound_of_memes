@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -15,9 +17,8 @@ class Example extends StatefulWidget {
   final String title;
   final String artist;
   final List<Songs>? allSongs;
-   final List<SearchSongs>? allSearchSongs;
+  final List<SearchSongs>? allSearchSongs;
   final List<Song>? allLikedSongs;
-
   final int currentIndex;
 
   const Example({
@@ -26,8 +27,10 @@ class Example extends StatefulWidget {
     required this.imageUrl,
     required this.title,
     required this.artist,
-     this.allSongs,
-    required this.currentIndex, this.allLikedSongs, this.allSearchSongs,
+    this.allSongs,
+    this.allSearchSongs,
+    this.allLikedSongs,
+    required this.currentIndex,
   }) : super(key: key);
 
   @override
@@ -41,6 +44,8 @@ class _ExampleState extends State<Example> {
   late String _imageUrl;
   late String _title;
   late String _artist;
+  late List<Song>? _allLikedSongs;
+  late List<Songs>? _allSongs;
 
   Stream<PositionData> get _positionDataStream =>
       Rx.combineLatest3<Duration, Duration, Duration?, PositionData>(
@@ -59,6 +64,8 @@ class _ExampleState extends State<Example> {
     super.initState();
     _audioPlayer = AudioPlayer();
     _currentIndex = widget.currentIndex;
+    _allLikedSongs = widget.allLikedSongs;
+    _allSongs = widget.allSongs;
     _updateSongDetails();
     _init();
   }
@@ -69,39 +76,60 @@ class _ExampleState extends State<Example> {
   }
 
   Future<void> _playCurrentSong() async {
-  if (widget.allSongs!.isEmpty) {
-    print('No songs available to play.');
-    return;
+    if (_allSongs != null && _allSongs!.isNotEmpty) {
+      if (_currentIndex < 0 || _currentIndex >= _allSongs!.length) {
+        print('Error: _currentIndex out of range for allSongs.');
+        _currentIndex = 0; // Reset to a valid index if needed
+      }
+      final song = _allSongs![_currentIndex];
+      try {
+        await _audioPlayer.setAudioSource(AudioSource.uri(Uri.parse(song.songUrl)));
+      } catch (e) {
+        print('Error playing song from allSongs: $e');
+      }
+    } else if (_allLikedSongs != null && _allLikedSongs!.isNotEmpty) {
+      if (_currentIndex < 0 || _currentIndex >= _allLikedSongs!.length) {
+        print('Error: _currentIndex out of range for allLikedSongs.');
+        _currentIndex = 0; // Reset to a valid index if needed
+      }
+      final likedsong = _allLikedSongs![_currentIndex];
+      try {
+        await _audioPlayer.setAudioSource(AudioSource.uri(Uri.parse(likedsong.songUrl)));
+      } catch (e) {
+        print('Error playing song from allLikedSongs: $e');
+      }
+    } else {
+      print('No songs available to play.');
+    }
   }
-
-  if (_currentIndex < 0 || _currentIndex >= widget.allSongs!.length) {
-    print('Error: _currentIndex out of range.');
-    _currentIndex = 0; // Reset to a valid index if needed
-  }
-
-  final song = widget.allSongs![_currentIndex];
-  try {
-    await _audioPlayer.setAudioSource(AudioSource.uri(Uri.parse(song.songUrl)));
-  } catch (e) {
-    print('Error playing song: $e');
-  }
-}
-
-
 
   void _updateSongDetails() {
-    final song = widget.allSongs![_currentIndex];
-    setState(() {
-      _songUrl = song.songUrl;
-      _imageUrl = song.imageUrl;
-      _title = song.songName;
-      _artist = song.userId ?? 'Unknown Artist';
-    });
+    if (_allSongs != null && _allSongs!.isNotEmpty) {
+      final song = _allSongs![_currentIndex];
+      setState(() {
+        _songUrl = song.songUrl;
+        _imageUrl = song.imageUrl;
+        _title = song.songName;
+        _artist = song.userId ?? 'Unknown Artist';
+      });
+    } else if (_allLikedSongs != null && _allLikedSongs!.isNotEmpty) {
+      final likedsong = _allLikedSongs![_currentIndex];
+      setState(() {
+        _songUrl = likedsong.songUrl;
+        _imageUrl = likedsong.imageUrl;
+        _title = likedsong.songName;
+        _artist = likedsong.userId ?? 'Unknown Artist';
+      });
+    }
   }
 
   void _skipToNext() {
     setState(() {
-      _currentIndex = (_currentIndex + 1) % widget.allSongs!.length;
+      if (_allSongs != null && _allSongs!.isNotEmpty) {
+        _currentIndex = (_currentIndex + 1) % _allSongs!.length;
+      } else if (_allLikedSongs != null && _allLikedSongs!.isNotEmpty) {
+        _currentIndex = (_currentIndex + 1) % _allLikedSongs!.length;
+      }
       _updateSongDetails();
       _playCurrentSong();
     });
@@ -109,8 +137,11 @@ class _ExampleState extends State<Example> {
 
   void _skipToPrevious() {
     setState(() {
-      _currentIndex =
-          (_currentIndex - 1 + widget.allSongs!.length) % widget.allSongs!.length;
+      if (_allSongs != null && _allSongs!.isNotEmpty) {
+        _currentIndex = (_currentIndex - 1 + _allSongs!.length) % _allSongs!.length;
+      } else if (_allLikedSongs != null && _allLikedSongs!.isNotEmpty) {
+        _currentIndex = (_currentIndex - 1 + _allLikedSongs!.length) % _allLikedSongs!.length;
+      }
       _updateSongDetails();
       _playCurrentSong();
     });
@@ -121,47 +152,65 @@ class _ExampleState extends State<Example> {
     _audioPlayer.dispose();
     super.dispose();
   }
-  
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-  backgroundColor: Theme.of(context).colorScheme.background,
-  appBar: AppBar(
-    backgroundColor: Theme.of(context).colorScheme.background,
-    leading: IconButton(
-      icon: const Icon(Icons.arrow_back),
-      onPressed: () => Navigator.pop(context),
-    ),
-    title: Text(
-      _title,
-      style: TextStyle(
-        color: Theme.of(context).colorScheme.onBackground,
+      backgroundColor: Theme.of(context).colorScheme.background,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.background,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          _title,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onBackground,
+          ),
+        ),
       ),
-    ),
-  ),
-  body: Container(
-    color: Theme.of(context).colorScheme.primary,
-    width: double.infinity,
-    height: double.infinity,
-    child: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          StreamBuilder<bool>(
-            stream: _audioPlayer.playingStream,
-            builder: (context, snapshot) {
-              final isPlaying = snapshot.data ?? false;
-              return AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: isPlaying
-                    ? Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: RotatingBorder(
-                          key: const ValueKey("rotatingBorder"),
-                          size: 500, // Same size for height and width as the original image
-                          borderWidth: 4.0, // Border width for the rotating effect
-                          child: Hero(
+      body: Container(
+        color: Theme.of(context).colorScheme.primary,
+        width: double.infinity,
+        height: double.infinity,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              StreamBuilder<bool>(
+                stream: _audioPlayer.playingStream,
+                builder: (context, snapshot) {
+                  final isPlaying = snapshot.data ?? false;
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: isPlaying
+                        ? Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: RotatingBorder(
+                              key: const ValueKey("rotatingBorder"),
+                              size: 500,
+                              borderWidth: 4.0,
+                              child: Hero(
+                                tag: _imageUrl,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20.0),
+                                  child: CachedNetworkImage(
+                                    imageUrl: _imageUrl,
+                                    placeholder: (context, url) =>
+                                        const CircularProgressIndicator(),
+                                    errorWidget: (context, url, error) =>
+                                        const Icon(Icons.error),
+                                    fit: BoxFit.contain,
+                                    width: 400,
+                                    height: 600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        : Hero(
+                            key: const ValueKey("staticImage"),
                             tag: _imageUrl,
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(20.0),
@@ -172,91 +221,70 @@ class _ExampleState extends State<Example> {
                                 errorWidget: (context, url, error) =>
                                     const Icon(Icons.error),
                                 fit: BoxFit.contain,
-                                width: 400, // Width of the image
-                                height: 600, // Height of the image
+                                width: 400,
+                                height: 500,
                               ),
                             ),
                           ),
-                        ),
-                    )
-                    : Hero(
-                        key: const ValueKey("staticImage"),
-                        tag: _imageUrl,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20.0),
-                          child: CachedNetworkImage(
-                            imageUrl: _imageUrl,
-                            placeholder: (context, url) =>
-                                const CircularProgressIndicator(),
-                            errorWidget: (context, url, error) =>
-                                const Icon(Icons.error),
-                            fit: BoxFit.contain,
-                            width: 400, // Width of the image
-                            height: 500, // Height of the image
-                          ),
-                        ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              StreamBuilder<PositionData>(
+                stream: _positionDataStream,
+                builder: (context, snapshot) {
+                  final positionData = snapshot.data;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                    child: ProgressBar(
+                      barHeight: 10,
+                      baseBarColor:
+                          Theme.of(context).colorScheme.inversePrimary,
+                      bufferedBarColor:
+                          Theme.of(context).colorScheme.background,
+                      progressBarColor: Colors.red,
+                      thumbColor: Colors.red,
+                      timeLabelTextStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.onBackground,
+                        fontWeight: FontWeight.w600,
                       ),
-              );
-            },
-          ),
-          const SizedBox(height: 20),
-          StreamBuilder<PositionData>(
-            stream: _positionDataStream,
-            builder: (context, snapshot) {
-              final positionData = snapshot.data;
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30.0),
-                child: ProgressBar(
-                  barHeight: 10,
-                  baseBarColor: Theme.of(context).colorScheme.inversePrimary,
-                  bufferedBarColor: Theme.of(context).colorScheme.background,
-                  progressBarColor: Colors.red,
-                  thumbColor: Colors.red,
-                  timeLabelTextStyle: TextStyle(
-                    color: Theme.of(context).colorScheme.onBackground,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  progress: positionData?.position ?? Duration.zero,
-                  buffered: positionData?.bufferedPosition ?? Duration.zero,
-                  total: positionData?.bufferDuration ?? Duration.zero,
-                  onSeek: _audioPlayer.seek,
+                      progress: positionData?.position ?? Duration.zero,
+                      buffered: positionData?.bufferedPosition ?? Duration.zero,
+                      total: positionData?.bufferDuration ?? Duration.zero,
+                      onSeek: _audioPlayer.seek,
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              Text(
+                _title,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onBackground,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
                 ),
-              );
-            },
+              ),
+              Text(
+                _artist,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onBackground,
+                  fontSize: 18,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Controls(
+                audioPlayer: _audioPlayer,
+                onNext: _skipToNext,
+                onPrevious: _skipToPrevious,
+              ),
+            ],
           ),
-          const SizedBox(height: 20),
-          Text(
-            _title,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onBackground,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            _artist,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onBackground,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Controls(
-            audioPlayer: _audioPlayer,
-            onNext: _skipToNext,
-            onPrevious: _skipToPrevious,
-          ),
-        ],
+        ),
       ),
-    ),
-  ),
-);
-
-
-
+    );
   }
 }
-
 class PositionData {
   final Duration position;
   final Duration bufferedPosition;
@@ -308,8 +336,8 @@ class _ControlsState extends State<Controls> {
         ),
         IconButton(
           iconSize: 48, // Increase icon size
-          icon:
-              const Icon(Icons.skip_previous, color: Colors.white), // Set icon color
+          icon: const Icon(Icons.skip_previous,
+              color: Colors.white), // Set icon color
           onPressed: widget.onPrevious,
         ),
         StreamBuilder<PlayerState>(
@@ -330,7 +358,8 @@ class _ControlsState extends State<Controls> {
             } else if (processingState != ProcessingState.completed) {
               return IconButton(
                 iconSize: 48, // Increase icon size
-                icon: const Icon(Icons.pause, color: Colors.white), // Set icon color
+                icon: const Icon(Icons.pause,
+                    color: Colors.white), // Set icon color
                 onPressed: () {
                   widget.audioPlayer.pause();
                 },
@@ -338,8 +367,8 @@ class _ControlsState extends State<Controls> {
             }
             return IconButton(
               iconSize: 48, // Increase icon size
-              icon:
-                  const Icon(Icons.play_arrow, color: Colors.white), // Set icon color
+              icon: const Icon(Icons.play_arrow,
+                  color: Colors.white), // Set icon color
               onPressed: () {
                 widget.audioPlayer.seek(Duration.zero);
                 widget.audioPlayer.play();
@@ -349,7 +378,8 @@ class _ControlsState extends State<Controls> {
         ),
         IconButton(
           iconSize: 48, // Increase icon size
-          icon: const Icon(Icons.skip_next, color: Colors.white), // Set icon color
+          icon: const Icon(Icons.skip_next,
+              color: Colors.white), // Set icon color
           onPressed: widget.onNext,
         ),
         IconButton(

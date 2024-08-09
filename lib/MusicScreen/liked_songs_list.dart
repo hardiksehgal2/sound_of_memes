@@ -19,7 +19,7 @@ class LikedSongsList extends StatefulWidget {
 
 class _LikedSongsListState extends State<LikedSongsList> {
   int _page = 1;
-  List<Song> _songs = [];
+  List<Song> _likesongs = [];
   bool _isLoading = false;
   bool _hasMore = true;
   late AudioPlayer audioPlayer;
@@ -71,7 +71,7 @@ class _LikedSongsListState extends State<LikedSongsList> {
         });
       } else {
         setState(() {
-          _songs.addAll(likedSongs.songs);
+          _likesongs.addAll(likedSongs.songs);
           _page++;
         });
       }
@@ -84,7 +84,7 @@ class _LikedSongsListState extends State<LikedSongsList> {
     });
   }
 
-  void navigateToExample(Song song, int index) {
+  void navigateToExample(Song song, int index, List<Song> allSongs) {
   Navigator.push(
     context,
     MaterialPageRoute(
@@ -93,8 +93,11 @@ class _LikedSongsListState extends State<LikedSongsList> {
         imageUrl: song.imageUrl,
         title: song.songName,
         artist: song.username,
-        allLikedSongs: _songs,  // Pass the correct list of songs
-        currentIndex: index, allSongs: [],
+        
+         allSongs: null, // Pass null if you don't need to use allSongs
+        allLikedSongs: _likesongs, // Pass the list of liked songs
+        allSearchSongs: null, // Pass null if you don't need to use allSearchSongs
+        currentIndex: index,
       ),
     ),
   );
@@ -168,13 +171,13 @@ class _LikedSongsListState extends State<LikedSongsList> {
               },
             )
           : ListView.builder(
-              itemCount: _songs.length,
+              itemCount: _likesongs.length,
               itemBuilder: (context, index) {
-                if (index == _songs.length - 1 && _hasMore) {
+                if (index == _likesongs.length - 1 && _hasMore) {
                   _fetchLikedSongs(); // Load more items when reaching the end of the list
                 }
 
-                final song = _songs[index];
+                final likedsong = _likesongs[index];
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                   child: Card(
@@ -187,35 +190,35 @@ class _LikedSongsListState extends State<LikedSongsList> {
                       leading: ClipRRect(
                         borderRadius: BorderRadius.circular(10),
                         child: Image.network(
-                          song.imageUrl,
+                          likedsong.imageUrl,
                           width: 60,
                           height: 60,
                           fit: BoxFit.cover,
                         ),
                       ),
                       title: Text(
-                        song.songName,
+                        likedsong.songName,
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('By ${song.username}'),
+                          Text('By ${likedsong.username}'),
                           const SizedBox(height: 5),
                           Row(
                             children: [
                               const Icon(Icons.thumb_up, color: Colors.green),
                               const SizedBox(width: 5),
-                              Text('${song.likes}'),
+                              Text('${likedsong.likes}'),
                               const SizedBox(width: 15),
                               const Icon(Icons.visibility, color: Colors.blue),
                               const SizedBox(width: 5),
-                              Text('${song.views}'),
+                              Text('${likedsong.views}'),
                             ],
                           ),
                         ],
                       ),
-                      onTap: () => navigateToExample(song, index),
+                      onTap: () => navigateToExample(likedsong, index,_likesongs),
                     ),
                   ),
                 );
