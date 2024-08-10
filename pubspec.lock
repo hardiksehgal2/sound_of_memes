@@ -17,6 +17,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.3.4"
+  animation_search_bar:
+    dependency: "direct main"
+    description:
+      name: animation_search_bar
+      sha256: "1742679df01989988a45075dbda1f84d7bfd94a197ca4e578179155689337b7b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.10"
   archive:
     dependency: transitive
     description:
@@ -382,6 +390,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.2"
+  flutter_riverpod:
+    dependency: transitive
+    description:
+      name: flutter_riverpod
+      sha256: "0f1974eff5bbe774bf1d870e406fc6f29e3d6f1c46bd9c58e7172ff68a785d7d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.5.1"
   flutter_sequence_animation:
     dependency: "direct main"
     description:
@@ -390,6 +406,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
+  flutter_staggered_animations:
+    dependency: "direct main"
+    description:
+      name: flutter_staggered_animations
+      sha256: "81d3c816c9bb0dca9e8a5d5454610e21ffb068aedb2bde49d2f8d04f75538351"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
   flutter_svg:
     dependency: "direct main"
     description:
@@ -608,6 +632,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
+  loading_animation_widget:
+    dependency: "direct main"
+    description:
+      name: loading_animation_widget
+      sha256: ee3659035528d19145d50cf0107632bf647e7306c88b6a32f35f3bed63f6d728
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.1"
   lottie:
     dependency: "direct main"
     description:
@@ -784,6 +816,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.1"
+  riverpod:
+    dependency: transitive
+    description:
+      name: riverpod
+      sha256: f21b32ffd26a36555e501b04f4a5dca43ed59e16343f1a30c13632b2351dfa4d
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.5.1"
   rxdart:
     dependency: "direct main"
     description:
@@ -933,6 +973,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.11.1"
+  state_notifier:
+    dependency: transitive
+    description:
+      name: state_notifier
+      sha256: b8677376aa54f2d7c58280d5a007f9e8774f1968d1fb1c096adcb4792fba29bb
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   stream_channel:
     dependency: transitive
     description:

@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -108,7 +109,9 @@ class _LikedSongsListState extends State<LikedSongsList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        elevation: 5,
         title:  Text('Liked Songs',style:  GoogleFonts.pottaOne(fontWeight: FontWeight.bold,)),
+         backgroundColor: Theme.of(context).colorScheme.background
       ),
       body: _isLoading
           ? ListView.builder(
@@ -171,55 +174,77 @@ class _LikedSongsListState extends State<LikedSongsList> {
                 );
               },
             )
-          : ListView.builder(
+          :  ListView.builder(
               itemCount: _likesongs.length,
               itemBuilder: (context, index) {
                 if (index == _likesongs.length - 1 && _hasMore) {
                   _fetchLikedSongs(); // Load more items when reaching the end of the list
                 }
-
+          
                 final likedsong = _likesongs[index];
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 16.0),
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    elevation: 5,
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(10),
-                      leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
-                          likedsong.imageUrl,
-                          width: 60,
-                          height: 120,
-                          fit: BoxFit.fill,
+                  child: AnimationConfiguration.staggeredGrid(
+                              position: _likesongs.length,
+                              duration: const Duration(milliseconds: 375),
+                              columnCount: 2,
+                    child: ScaleAnimation(
+                      child: FadeInAnimation(
+                        child: Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          elevation: 5,
+                          child: AnimationConfiguration.staggeredGrid(
+                              position: _likesongs.length,
+                              duration: const Duration(milliseconds: 505),
+                              columnCount: 2,
+                            child: ScaleAnimation(
+                              child: FadeInAnimation(
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.all(10),
+                                  leading: ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: Image.network(
+                                      likedsong.imageUrl,
+                                      width: 60,
+                                      height: 120,
+                                      fit: BoxFit.fill,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    likedsong.songName,
+                                    style:  GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16),
+                                    
+                                  ),
+                                  
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(height: 9),
+                                                
+                                      Text('By ${likedsong.username}',style:  GoogleFonts.poppins()),
+                                      const SizedBox(height: 9),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.favorite, color: Colors.pink,size: 15,),
+                                          const SizedBox(width: 5),
+                                          Text('${likedsong.likes}',style:  GoogleFonts.poppins()),
+                                          const SizedBox(width: 15),
+                                          const Icon(Icons.visibility, color: Colors.blue,size: 15,),
+                                          const SizedBox(width: 5),
+                                          Text('${likedsong.views}',style:  GoogleFonts.poppins()),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  onTap: () => navigateToExample(likedsong, index,_likesongs),
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                      title: Text(
-                        likedsong.songName,
-                        style:  GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('By ${likedsong.username}',style:  GoogleFonts.poppins(fontWeight: FontWeight.bold,)),
-                          const SizedBox(height: 5),
-                          Row(
-                            children: [
-                              const Icon(Icons.favorite, color: Colors.pink,size: 15,),
-                              const SizedBox(width: 5),
-                              Text('${likedsong.likes}',style:  GoogleFonts.poppins(fontWeight: FontWeight.bold,)),
-                              const SizedBox(width: 15),
-                              const Icon(Icons.visibility, color: Colors.blue,size: 15,),
-                              const SizedBox(width: 5),
-                              Text('${likedsong.views}',style:  GoogleFonts.poppins(fontWeight: FontWeight.bold,)),
-                            ],
-                          ),
-                        ],
-                      ),
-                      onTap: () => navigateToExample(likedsong, index,_likesongs),
                     ),
                   ),
                 );

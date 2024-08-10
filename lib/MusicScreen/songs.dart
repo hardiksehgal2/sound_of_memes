@@ -2,9 +2,11 @@
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:audioplayers/audioplayers.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:page_animation_transition/animations/bottom_to_top_faded_transition.dart';
 // import 'package:page_animation_transition/animations/bottom_to_top_faded_transition.dart';
 // import 'package:page_animation_transition/animations/bottom_to_top_transition.dart';
@@ -13,6 +15,7 @@ import 'package:page_animation_transition/page_animation_transition.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:ventures/MusicScreen/custom_button';
 // import 'package:ventures/MusicScreen/custom_button.dart';
+// import 'screens/card_grid_screen.dart';
 import 'package:ventures/MusicScreen/example.dart';
 import 'package:ventures/MusicScreen/search_screen.dart';
 import 'package:ventures/Screen/splash_screen.dart';
@@ -243,30 +246,42 @@ class _SongScreenState extends State<SongScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title:  Text('Logout',style: GoogleFonts.pottaOne(
-          fontSize: 18,
-          color: Theme.of(context).colorScheme.inversePrimary,
-        ),),
-        content:  Text('Do you want to logout?',style: GoogleFonts.poppins(
-          fontSize: 18,
-        ),),
+        title: Text(
+          'Logout',
+          style: GoogleFonts.pottaOne(
+            fontSize: 18,
+            color: Theme.of(context).colorScheme.inversePrimary,
+          ),
+        ),
+        content: Text(
+          'Do you want to logout?',
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child:  Text('Cancel',style: GoogleFonts.poppins(
-          fontSize: 14,
-          color:Theme.of(context).colorScheme.inversePrimary,
-        ),),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.inversePrimary,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               _logout();
             },
-            child:  Text('Logout',style: GoogleFonts.poppins(
-          fontSize: 14,
-          color:Theme.of(context).colorScheme.inversePrimary,
-        ),),
+            child: Text(
+              'Logout',
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.inversePrimary,
+              ),
+            ),
           ),
         ],
       ),
@@ -293,6 +308,7 @@ class _SongScreenState extends State<SongScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.background,
         title: Text(
           "Recent Songs",
           textAlign: TextAlign.center,
@@ -301,29 +317,29 @@ class _SongScreenState extends State<SongScreen> {
             fontSize: 22,
           ),
         ),
+        elevation: 5,
         actions: [
-        IconButton(
-          icon: Icon(Icons.search),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => SearchScreen()),
-            );
-          },
-        ),
-        IconButton(
-          color: Theme.of(context).colorScheme.primary,
-          icon: const CircleAvatar(
-            backgroundImage: AssetImage('assets/images/pepe_calm.png'),
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              Navigator.of(context).push(PageAnimationTransition(
+                    page:  SearchScreen(),
+                    
+                    pageAnimationType: BottomToTopFadedTransition()));
+            },
           ),
-          onPressed: _showLogoutDialog,
-        ),
-      ],
+          IconButton(
+            color: Theme.of(context).colorScheme.primary,
+            icon: const CircleAvatar(
+              backgroundImage: AssetImage('assets/images/pepe_calm.png'),
+            ),
+            onPressed: _showLogoutDialog,
+          ),
+        ],
       ),
       backgroundColor: Theme.of(context).colorScheme.background,
       drawer: const MyDrawer(),
-      body:
-       NotificationListener<ScrollNotification>(
+      body: NotificationListener<ScrollNotification>(
         onNotification: (scrollInfo) {
           if (!_isLoading &&
               scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
@@ -343,8 +359,23 @@ class _SongScreenState extends State<SongScreen> {
           itemCount: _songs.length + (_isLoading ? 1 : 0),
           itemBuilder: (context, index) {
             if (index >= _songs.length) {
-              return const Center(
-                child: CircularProgressIndicator(),
+              return Align(
+                alignment: Alignment.bottomCenter,
+                child: AnimationConfiguration.staggeredGrid(
+                  position: index,
+                  duration: const Duration(milliseconds: 375),
+                  columnCount: 2,
+                  child: ScaleAnimation(
+                    child: FadeInAnimation(
+                      child: Center(
+                        child: LoadingAnimationWidget.staggeredDotsWave(
+                          color: Theme.of(context).colorScheme.inversePrimary,
+                          size: 40,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               );
             }
 
@@ -352,105 +383,118 @@ class _SongScreenState extends State<SongScreen> {
             final liked = _isLiked(song.songId);
             final disliked = _isdisLiked(song.songId);
 
-            return Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          PageAnimationTransition(
-                            page: Example(
-                              songUrl: song.songUrl,
-                              imageUrl: song.imageUrl,
-                              title: song.songName,
-                              artist: song.username,
-                              allSongs:
-                                  _songs, // Pass the correct list of songs
-                              currentIndex: index,
-                            ),
-                            pageAnimationType: BottomToTopFadedTransition(),
-                          ),
-                        );
-                      }, // navigateToExample(song, index, _songs)
-
-                      child: Hero(
-                        tag: song.imageUrl,
-                        child: ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(12)),
-                          child: Image.network(
-                            song.imageUrl,
-                            fit: BoxFit.fill,
-                            width: double.infinity,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8),
+            return AnimationConfiguration.staggeredGrid(
+              position: index,
+              duration: const Duration(milliseconds: 375),
+              columnCount: 2,
+              child: ScaleAnimation(
+                child: FadeInAnimation(
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          song.songName,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          song.tags.join(', '),
-                          style:
-                              const TextStyle(fontSize: 10, color: Colors.grey),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        // const SizedBox(height: 2),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            IconButton(
-                              icon: Icon(
-                                Icons.favorite,
-                                size: 14,
-                                color: liked ? Colors.pink : Colors.grey,
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                PageAnimationTransition(
+                                  page: Example(
+                                    songUrl: song.songUrl,
+                                    imageUrl: song.imageUrl,
+                                    title: song.songName,
+                                    artist: song.username,
+                                    allSongs:
+                                        _songs, // Pass the correct list of songs
+                                    currentIndex: index,
+                                  ),
+                                  pageAnimationType:
+                                      BottomToTopFadedTransition(),
+                                ),
+                              );
+                            }, // navigateToExample(song, index, _songs)
+
+                            child: Hero(
+                              tag: song.imageUrl,
+                              child: ClipRRect(
+                                borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(12)),
+                                child: Image.network(
+                                  song.imageUrl,
+                                  fit: BoxFit.fill,
+                                  width: double.infinity,
+                                ),
                               ),
-                              onPressed: () => _toggleLike(song.songId),
                             ),
-                            // const SizedBox(width: 2),
-                            Text(
-                                '${_likedSongs.contains(song.songId) ? song.likes + (_isLiked(song.songId) ? 1 : 0) : song.likes}',
-                                style: const TextStyle(fontSize: 10)),
-                            // const SizedBox(width: 3),
-                            IconButton(
-                              icon: Icon(
-                                Icons.thumb_down_alt,
-                                size: 14,
-                                color: disliked ? Colors.blue : Colors.grey,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                song.songName,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 14),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              onPressed: () => _toggleDislike(song.songId),
-                            ),
-                            const SizedBox(width: 2),
-                            // Text('${_dislikedSongs.contains(song.songId) ? song.dislikes + (_isdisLiked(song.songId) ? 1 : 0) : song.dislikes}',
-                            //     style: const TextStyle(fontSize: 10)),
-                            // const SizedBox(width: 10),
-                            const Icon(Icons.visibility, size: 14),
-                            const SizedBox(width: 4),
-                            Text('${song.views}',
-                                style: const TextStyle(fontSize: 10)),
-                          ],
-                        )
+                              const SizedBox(height: 4),
+                              Text(
+                                song.tags.join(', '),
+                                style: const TextStyle(
+                                    fontSize: 10, color: Colors.grey),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              // const SizedBox(height: 2),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.favorite,
+                                      size: 14,
+                                      color: liked ? Colors.pink : Colors.grey,
+                                    ),
+                                    onPressed: () => _toggleLike(song.songId),
+                                  ),
+                                  // const SizedBox(width: 2),
+                                  Text(
+                                      '${_likedSongs.contains(song.songId) ? song.likes + (_isLiked(song.songId) ? 1 : 0) : song.likes}',
+                                      style: const TextStyle(fontSize: 10)),
+                                  // const SizedBox(width: 3),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.thumb_down_alt,
+                                      size: 14,
+                                      color:
+                                          disliked ? Colors.blue : Colors.grey,
+                                    ),
+                                    onPressed: () =>
+                                        _toggleDislike(song.songId),
+                                  ),
+                                  const SizedBox(width: 2),
+                                  // Text('${_dislikedSongs.contains(song.songId) ? song.dislikes + (_isdisLiked(song.songId) ? 1 : 0) : song.dislikes}',
+                                  //     style: const TextStyle(fontSize: 10)),
+                                  // const SizedBox(width: 10),
+                                  const Icon(Icons.visibility, size: 14),
+                                  const SizedBox(width: 4),
+                                  Text('${song.views}',
+                                      style: const TextStyle(fontSize: 10)),
+                                ],
+                              )
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
             );
           },

@@ -126,7 +126,7 @@ class _ExampleState extends State<Example> {
       _songUrl = song.songUrl;
       _imageUrl = song.imageUrl;
       _title = song.songName;
-      _artist = song.userId ?? 'Unknown Artist';
+      _artist = song.username ?? 'Unknown Artist';
     });
   }
 

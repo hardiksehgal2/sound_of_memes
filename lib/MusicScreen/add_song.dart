@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -103,6 +104,8 @@ class _AddSongsState extends State<AddSongs> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+         backgroundColor: Theme.of(context).colorScheme.background,
+         elevation: 5,
         title: Text(
           "My Creations",
           textAlign: TextAlign.center,
@@ -113,112 +116,131 @@ class _AddSongsState extends State<AddSongs> {
         ),
       ),
       body: _songs.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 250,
-                    height: 250,
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage("assets/guitar.gif"),
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  FadeInRight(
-                    child: Text(
-                      "No songs in the Playlist",
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 22,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 200,
-                childAspectRatio: 0.7,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 16,
-              ),
-              itemCount: _songs.length + (_isLoading ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index >= _songs.length) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-
-                final song = _songs[index];
-                return Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => navigateToExample(song, index, _songs),
-                          child: Hero(
-                            tag: song.imageUrl,
-                            child: ClipRRect(
-                              borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(12)),
-                              child: Image.network(
-                                song.imageUrl,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                              ),
+          ? AnimationConfiguration.staggeredGrid(
+             position: _songs.length,
+                  duration: const Duration(milliseconds: 375),
+                  columnCount: 2,
+            child: ScaleAnimation(
+              child: FadeInAnimation(
+                child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 250,
+                          height: 250,
+                          decoration: const BoxDecoration(
+                            image: DecorationImage(
+                              image: AssetImage("assets/guitar.gif"),
+                              fit: BoxFit.contain,
                             ),
                           ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8),
+                        const SizedBox(height: 30),
+                        FadeInRight(
+                          child: Text(
+                            "No songs in the Playlist",
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 22,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ),
+            ),
+          )
+          : AnimationConfiguration.staggeredGrid(
+             position: _songs.length,
+                  duration: const Duration(milliseconds: 375),
+                  columnCount: 2,
+            child: ScaleAnimation(
+              child: FadeIn(
+                curve: Curves.easeInOut,
+                child: GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 200,
+                      childAspectRatio: 0.7,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 16,
+                    ),
+                    itemCount: _songs.length + (_isLoading ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index >= _songs.length) {
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                
+                      final song = _songs[index];
+                      return Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              song.songName,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 14),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () => navigateToExample(song, index, _songs),
+                                child: Hero(
+                                  tag: song.imageUrl,
+                                  child: ClipRRect(
+                                    borderRadius: const BorderRadius.vertical(
+                                        top: Radius.circular(12)),
+                                    child: Image.network(
+                                      song.imageUrl,
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              song.tags.join(', '),
-                              style: const TextStyle(
-                                  fontSize: 10, color: Colors.grey),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    song.songName,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold, fontSize: 14),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    song.tags.join(', '),
+                                    style: const TextStyle(
+                                        fontSize: 10, color: Colors.grey),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.visibility, size: 14),
+                                      const SizedBox(width: 4),
+                                      Text('${song.views}',
+                                          style: const TextStyle(fontSize: 10)),
+                                    ],
+                                  )
+                                ],
+                              ),
                             ),
-                            const SizedBox(height: 2),
-                            Row(
-                              children: [
-                                const Icon(Icons.visibility, size: 14),
-                                const SizedBox(width: 4),
-                                Text('${song.views}',
-                                    style: const TextStyle(fontSize: 10)),
-                              ],
-                            )
                           ],
                         ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
-                );
-              },
+              ),
             ),
+          ),
     );
   }
 }

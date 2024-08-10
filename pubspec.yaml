@@ -52,6 +52,9 @@ dependencies:
   flutter_sequence_animation: ^4.0.0
   page_animation_transition: ^1.0.0
   glowy_borders: ^1.0.2
+  flutter_staggered_animations: ^1.1.1
+  loading_animation_widget: ^1.2.1
+  animation_search_bar: ^0.0.10
 
 flutter_launcher_icons:
   android: "launcher_icon"

@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ventures/MusicScreen/example.dart';
 import 'package:ventures/MusicScreen/fetch_song_slug.dart';
@@ -227,7 +229,23 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             const SizedBox(height: 20),
             _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ?  Center(
+                  child: AnimationConfiguration.staggeredGrid(
+                  position: 1,
+                  duration: const Duration(milliseconds: 375),
+                  columnCount: 2,
+                  child: ScaleAnimation(
+                    child: FadeInAnimation(
+                      child: Center(
+                        child: LoadingAnimationWidget.staggeredDotsWave(
+                          color: Theme.of(context).colorScheme.inversePrimary,
+                          size: 40,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                )
                 : _isNotFound
                     ? const Center(child: Text('Hey you might have not used the correct name, please check'))
                     : _searchResult != null
@@ -236,69 +254,78 @@ class _SearchScreenState extends State<SearchScreen> {
                               children: [
                                 GestureDetector(
                                   onTap: _navigateToExample, // Navigate on tap
-                                  child: Card(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Padding(
+                                  child: AnimationConfiguration.staggeredGrid(
+                  position: 1,
+                  duration: const Duration(milliseconds: 375),
+                  columnCount: 2,
+                                    child: ScaleAnimation(
+                                      child: FadeInAnimation(
+                                        child: Card(
+                                          child: Padding(
                                             padding: const EdgeInsets.all(8.0),
-                                            child: Image.network(
-                                              _searchResult!.imageUrl,
-                                              fit: BoxFit.fill,
-                                              width: double.infinity,
-                                              height: 400,
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Text(
-                                              _searchResult!.songName,
-                                              style: GoogleFonts.poppins(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 22,
-                                              ),
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8.0),
-                                            child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
-                                                IconButton(
-                                                  icon: Icon(
-                                                    Icons.favorite,
-                                                    size: 24,
-                                                    color: _isLiked(_searchResult!.songId) ? Colors.pink : Colors.grey,
+                                                Padding(
+                                                  padding: const EdgeInsets.all(8.0),
+                                                  child: Image.network(
+                                                    _searchResult!.imageUrl,
+                                                    fit: BoxFit.fill,
+                                                    width: double.infinity,
+                                                    height: 400,
                                                   ),
-                                                  onPressed: () => _toggleLike(_searchResult!.songId),
                                                 ),
-                                                Text(
-                                                  '${_likedSongs.contains(_searchResult!.songId) ? _searchResult!.likes + (_isLiked(_searchResult!.songId) ? 1 : 0) : _searchResult!.likes}',
-                                                  style: GoogleFonts.poppins(fontSize: 16),
-                                                ),
-                                                IconButton(
-                                                  icon: Icon(
-                                                    Icons.thumb_down_alt,
-                                                    size: 24,
-                                                    color: _isdisLiked(_searchResult!.songId) ? Colors.blue : Colors.grey,
+                                                Padding(
+                                                  padding: const EdgeInsets.all(8.0),
+                                                  child: Text(
+                                                    _searchResult!.songName,
+                                                    style: GoogleFonts.poppins(
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 22,
+                                                    ),
                                                   ),
-                                                  onPressed: () => _toggleDislike(_searchResult!.songId),
                                                 ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  '${_searchResult!.views}',
-                                                  style: GoogleFonts.poppins(fontSize: 16),
+                                                Padding(
+                                                  padding: const EdgeInsets.symmetric(
+                                                      horizontal: 8.0),
+                                                  child: Row(
+                                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                    children: [
+                                                      IconButton(
+                                                        icon: Icon(
+                                                          Icons.favorite,
+                                                          size: 24,
+                                                          color: _isLiked(_searchResult!.songId) ? Colors.pink : Colors.grey,
+                                                        ),
+                                                        onPressed: () => _toggleLike(_searchResult!.songId),
+                                                      ),
+                                                      Text(
+                                                        '${_likedSongs.contains(_searchResult!.songId) ? _searchResult!.likes + (_isLiked(_searchResult!.songId) ? 1 : 0) : _searchResult!.likes}',
+                                                        style: GoogleFonts.poppins(fontSize: 16),
+                                                      ),
+                                                      IconButton(
+                                                        icon: Icon(
+                                                          Icons.thumb_down_alt,
+                                                          size: 24,
+                                                          color: _isdisLiked(_searchResult!.songId) ? Colors.blue : Colors.grey,
+                                                        ),
+                                                        onPressed: () => _toggleDislike(_searchResult!.songId),
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        '${_searchResult!.views}',
+                                                        style: GoogleFonts.poppins(fontSize: 16),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
+                                                const SizedBox(height: 10),
+                                                // Optionally display lyrics here
                                               ],
                                             ),
                                           ),
-                                          const SizedBox(height: 10),
-                                          // Optionally display lyrics here
-                                        ],
+                                        ),
                                       ),
                                     ),
                                   ),

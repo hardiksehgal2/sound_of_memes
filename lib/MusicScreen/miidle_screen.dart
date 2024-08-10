@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -26,7 +27,48 @@ class _SongCreationBottomSheetState extends State<SongCreationBottomSheet> {
     'Blues',
     'Classical',
     'Country',
-    'Electronic'
+    'Electronic',
+    'Dance',
+    'Hip Hop',
+    'Rap',
+    'R&B',
+    'Soul',
+    'Reggae',
+    'EDM',
+    'Lo-Fi',
+    'Alternative',
+    'K-Pop',
+    'J-Pop',
+    'C-Pop',
+    'Afrobeat',
+    'Bollywood',
+    'Heavy Metal',
+    'Thrash Metal',
+    'Black Metal',
+    'Glitch Hop',
+    'Trap',
+    'Grime',
+    'Folk',
+    'Metal',
+    'Punk',
+    'Funk',
+    'Disco',
+    'House',
+    'Techno',
+    'Trance',
+    'Dubstep',
+    'Drum and Bass',
+    'Ambient',
+    'Indie',
+    'Gospel',
+    'Opera',
+    'Ska',
+    'Grunge',
+    'Swing',
+    'Bluegrass',
+    'Latin',
+    'Flamenco',
+    'Celtic',
   ];
 
   @override
@@ -193,7 +235,9 @@ class _SongCreationBottomSheetState extends State<SongCreationBottomSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(
-                  'It might take some time, it will be displayed in My creations')),
+            'It might take some time, it will be displayed in My creations',
+            style: GoogleFonts.poppins(),
+          )),
         );
         Navigator.pop(context); // Navigate back immediately
 

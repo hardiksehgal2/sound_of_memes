@@ -20,9 +20,10 @@ class MyDrawer extends StatelessWidget {
         children: [
           DrawerHeader(
             child: Center(
-              child: Icon(Icons.music_note,
-              size: 40,
-              color: Theme.of(context).colorScheme.inversePrimary,
+              child: Icon(
+                Icons.music_note,
+                size: 40,
+                color: Theme.of(context).colorScheme.inversePrimary,
               ),
             ),
           ),
@@ -31,17 +32,22 @@ class MyDrawer extends StatelessWidget {
             child: ListTile(
               title: "H O M E".text.make(),
               leading: const Icon(Icons.home),
-              onTap: ()=> Navigator.pop(context),
+              onTap: () => Navigator.pop(context),
             ),
           ),
           Padding(
             padding: const EdgeInsets.only(left: 25.0, top: 0),
             child: ListTile(
               title: "S E T T I N G S".text.make(),
-              leading: const Icon(Icons.settings),
-              onTap: (){ 
+              leading: Icon(
+                Icons.settings,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              onTap: () {
                 Navigator.pop(context);
-Navigator.of(context).push(PageAnimationTransition(page: const SettingsPage(), pageAnimationType: LeftToRightTransition()));
+                Navigator.of(context).push(PageAnimationTransition(
+                    page: const SettingsPage(),
+                    pageAnimationType: LeftToRightTransition()));
 
                 // Navigator.push(context, MaterialPageRoute(builder: (context)=> SettingsPage(),
                 // )
@@ -49,14 +55,19 @@ Navigator.of(context).push(PageAnimationTransition(page: const SettingsPage(), p
               },
             ),
           ),
-Padding(
+          Padding(
             padding: const EdgeInsets.only(left: 25.0, top: 0),
             child: ListTile(
               title: "L I K E D".text.make(),
-              leading: const Icon(Icons.settings),
-              onTap: (){ 
+              leading: const Icon(
+                Icons.favorite,
+                color: Colors.pink,
+              ),
+              onTap: () {
                 Navigator.pop(context);
-Navigator.of(context).push(PageAnimationTransition(page: const LikedSongsList(), pageAnimationType: LeftToRightTransition()));
+                Navigator.of(context).push(PageAnimationTransition(
+                    page: const LikedSongsList(),
+                    pageAnimationType: LeftToRightTransition()));
                 // Navigator.of(context).push(context, MaterialPageRoute(builder: (context)=> LikedSongsList(),
                 // )
                 // );
